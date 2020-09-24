@@ -44,14 +44,71 @@ class Iteration(BaseModel):
         verbose_name_plural = "Iterations"
 
 
-class UserAccount(BaseModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE)
+class Customer(BaseModel):
+    name = models.CharField(max_length=50)
+    address = models.CharField(max_length=250)
+    phone_number = models.CharField(max_length=10)
 
     def __str__(self):
-        return "user: {}, id: {}".format(self.user, self.pk)
+        return "{}, {}, {}, Customer Id: {}".format(self.name, self.address, self.phone_number, self.pk)
 
     class Meta:
-        db_table = "user_account"
-        verbose_name = "User Account"
-        verbose_name_plural = "User Accounts"
+        db_table = "customers"
+        verbose_name = "Customer"
+        verbose_name_plural = "Customers"
+
+
+class Account(BaseModel):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="accounts")
+    iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE, related_name="accounts")
+
+    def __str__(self):
+        return "{}, {}, Account Id: {}".format(self.customer, self.iteration, self.pk)
+
+    class Meta:
+        db_table = "accounts"
+        verbose_name = "Account"
+        verbose_name_plural = "Accounts"
+
+
+class IterationDeposit(BaseModel):
+    date = models.DateField()
+    amount = models.IntegerField()
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+
+    def __str__(self):
+        customer = self.account.customer
+        return "{}, {}, {}, Account Id: {}".format(customer.name, self.amount, self.date, self.account.pk)
+
+    class Meta:
+        db_table = "iteration_deposits"
+        verbose_name = "Iteration Deposit"
+        verbose_name_plural = "Iteration Deposits"
+
+
+class Loan(BaseModel):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="loans")
+    iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE, related_name="loans")
+    amount = models.IntegerField()
+
+    def __str__(self):
+        return "{}, {}, {}, Loan Id: {}".format(self.customer, self.iteration, self.amount, self.pk)
+
+    class Meta:
+        db_table = "loans"
+        verbose_name = "Loan"
+        verbose_name_plural = "Loans"
+
+
+class LoanDeposit(BaseModel):
+    date = models.DateField()
+    amount = models.IntegerField()
+    loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="deposits")
+
+    def __str__(self):
+        return "{}, {}, {}, Loan Deposit Id: {}".format(self.loan.pk, self.amount, self.date, self.pk)
+
+    class Meta:
+        db_table = "loan_deposits"
+        verbose_name = "Loan Deposit"
+        verbose_name_plural = "Loan Deposits"
