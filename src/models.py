@@ -34,8 +34,8 @@ class Iteration(BaseModel):
     day_of_payment = models.IntegerField()
 
     def __str__(self):
-        return "start_date: {}, no_of_months: {}, deposit_amount: {}".format(
-            self.start_date, self.no_of_months, self.deposit_amount
+        return "Iteration Id: {}, Start Date: {}".format(
+            self.pk, self.start_date
         )
 
     class Meta:
@@ -92,7 +92,7 @@ class Loan(BaseModel):
     amount = models.IntegerField()
 
     def __str__(self):
-        return "{}, {}, {}, Loan Id: {}".format(self.customer, self.iteration, self.amount, self.pk)
+        return "{}".format(self.pk)
 
     class Meta:
         db_table = "loans"
