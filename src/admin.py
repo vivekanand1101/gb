@@ -1,11 +1,17 @@
-from django.contrib import admin
-from src.models import Account, Customer, IterationDeposit, Iteration, Loan, LoanDeposit
-from django.utils.html import format_html
-from django.urls import reverse
-
 from datetime import datetime
-from django import forms
+
 from dateutil import relativedelta
+from django import forms
+from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
+
+from src.models import Account
+from src.models import Customer
+from src.models import Iteration
+from src.models import IterationDeposit
+from src.models import Loan
+from src.models import LoanDeposit
 
 
 class AccountForm(forms.ModelForm):
@@ -13,7 +19,7 @@ class AccountForm(forms.ModelForm):
     number_of_accounts = forms.CharField()
 
     def save(self, commit=True):
-        number_of_accounts = self.cleaned_data.get('number_of_accounts', None)
+        number_of_accounts = self.cleaned_data.get("number_of_accounts", None)
         number_of_accounts = int(number_of_accounts)
         for i in range(number_of_accounts - 1):
             obj = Account(
@@ -27,52 +33,93 @@ class AccountForm(forms.ModelForm):
 
     class Meta:
         model = Account
-        fields = '__all__'
+        fields = "__all__"
+
 
 class AccountAdmin(admin.ModelAdmin):
 
     form = AccountForm
 
     fieldsets = (
-        (None, {
-            'fields': ('created_by', 'modified_by', "id", 'customer', 'iteration', 'number_of_accounts',),
-        }),
+        (
+            None,
+            {
+                "fields": (
+                    "created_by",
+                    "modified_by",
+                    "id",
+                    "customer",
+                    "iteration",
+                    "number_of_accounts",
+                ),
+            },
+        ),
     )
     list_display = ("account_id", "customer_url", "iteration", "account_deposits_url")
     list_filter = ("customer__address",)
 
     def customer_url(self, obj):
         customer = obj.customer
-        url = reverse(f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change", args=[customer.id])
+        url = reverse(
+            f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change",
+            args=[customer.id],
+        )
         return format_html(f'<a href="{url}">{customer.name}, {customer.address}</a>')
 
     def account_id(self, obj):
-        url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
+        url = reverse(
+            f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id]
+        )
         return format_html(f'<a href="{url}">{obj.pk}</a>')
 
     def account_deposits_url(self, obj):
         deposits = obj.deposits.count()
         if deposits > 0:
-            url = reverse(f"admin:src_loandeposit_changelist") + f"?account__id__exact={obj.id}"
+            url = (
+                reverse(f"admin:src_loandeposit_changelist")
+                + f"?account__id__exact={obj.id}"
+            )
             return format_html(f'<a href="{url}">{deposits}</a>')
         else:
             return 0
 
+
 class CustomerAdmin(admin.ModelAdmin):
 
     fieldsets = (
-        (None, {
-            'fields': ('created_by', 'modified_by', 'name', 'address', 'phone_number'),
-        }),
+        (
+            None,
+            {
+                "fields": (
+                    "created_by",
+                    "modified_by",
+                    "name",
+                    "address",
+                    "phone_number",
+                ),
+            },
+        ),
     )
-    list_display = ("name", "address", "phone_number", "number_of_accounts", "number_of_loans", "iteration_dues", "loan_dues", "total_dues")
+    list_display = (
+        "name",
+        "address",
+        "phone_number",
+        "number_of_accounts",
+        "number_of_loans",
+        "iteration_dues",
+        "loan_dues",
+        "total_dues",
+    )
 
     list_filter = ("address",)
 
     def number_of_accounts(self, obj):
         accounts = obj.accounts.count()
         if accounts > 0:
-            url = reverse(f"admin:src_account_changelist") + f"?customer__id__exact={obj.id}"
+            url = (
+                reverse(f"admin:src_account_changelist")
+                + f"?customer__id__exact={obj.id}"
+            )
             return format_html(f'<a href="{url}">{obj.accounts.count()}</a>')
         else:
             return 0
@@ -80,7 +127,9 @@ class CustomerAdmin(admin.ModelAdmin):
     def number_of_loans(self, obj):
         accounts = obj.loans.count()
         if accounts > 0:
-            url = reverse(f"admin:src_loan_changelist") + f"?customer__id__exact={obj.id}"
+            url = (
+                reverse(f"admin:src_loan_changelist") + f"?customer__id__exact={obj.id}"
+            )
             return format_html(f'<a href="{url}">{obj.loans.count()}</a>')
         else:
             return 0
@@ -112,30 +161,52 @@ class CustomerAdmin(admin.ModelAdmin):
         return self.iteration_dues(obj) + self.loan_dues(obj)
 
 
-
 class LoanAdmin(admin.ModelAdmin):
 
     fieldsets = (
-        (None, {
-            'fields': ('created_by', 'modified_by', 'customer', 'iteration', 'amount',),
-        }),
+        (
+            None,
+            {
+                "fields": (
+                    "created_by",
+                    "modified_by",
+                    "customer",
+                    "iteration",
+                    "amount",
+                ),
+            },
+        ),
     )
-    list_display = ("loan_url", "customer_url", "iteration", "amount", "loan_deposits_url")
+    list_display = (
+        "loan_url",
+        "customer_url",
+        "iteration",
+        "amount",
+        "loan_deposits_url",
+    )
     list_filter = ("customer__address",)
 
     def loan_url(self, obj):
-        url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
+        url = reverse(
+            f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id]
+        )
         return format_html(f'<a href="{url}">{obj.id}</a>')
 
     def customer_url(self, obj):
         customer = obj.customer
-        url = reverse(f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change", args=[customer.id])
+        url = reverse(
+            f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change",
+            args=[customer.id],
+        )
         return format_html(f'<a href="{url}">{customer.name}, {customer.address}</a>')
 
     def loan_deposits_url(self, obj):
         deposits = obj.deposits.count()
         if deposits > 0:
-            url = reverse(f"admin:src_loandeposit_changelist") + f"?loan__id__exact={obj.id}"
+            url = (
+                reverse(f"admin:src_loandeposit_changelist")
+                + f"?loan__id__exact={obj.id}"
+            )
             return format_html(f'<a href="{url}">{deposits}</a>')
         else:
             return 0
@@ -144,51 +215,81 @@ class LoanAdmin(admin.ModelAdmin):
 class LoanDepositAdmin(admin.ModelAdmin):
 
     fieldsets = (
-        (None, {
-            'fields': ('created_by', 'modified_by', "loan", 'date', 'amount'),
-        }),
+        (None, {"fields": ("created_by", "modified_by", "loan", "date", "amount"),}),
     )
 
     list_display = ("loan_deposit_id", "customer_url", "date", "amount", "loan_url")
 
     def customer_url(self, obj):
         customer = obj.loan.customer
-        url = reverse(f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change", args=[customer.id])
+        url = reverse(
+            f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change",
+            args=[customer.id],
+        )
         return format_html(f'<a href="{url}">{customer.name}, {customer.address}</a>')
 
     def loan_deposit_id(self, obj):
-        url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
+        url = reverse(
+            f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id]
+        )
         return format_html(f'<a href="{url}">{obj.id}</a>')
-        
+
     def loan_url(self, obj):
         loan = obj.loan
-        url = reverse(f"admin:{loan._meta.app_label}_{loan._meta.model_name}_change", args=[loan.id])
+        url = reverse(
+            f"admin:{loan._meta.app_label}_{loan._meta.model_name}_change",
+            args=[loan.id],
+        )
         return format_html(f'<a href="{url}">{loan.pk}</a>')
-
 
 
 class IterationDepositAdmin(admin.ModelAdmin):
 
     fieldsets = (
-        (None, {
-            'fields': ('created_by', 'modified_by', "iteration_deposit_id", 'customer_url', 'date', 'amount', 'account_url'),
-        }),
+        (
+            None,
+            {
+                "fields": (
+                    "created_by",
+                    "modified_by",
+                    "iteration_deposit_id",
+                    "customer_url",
+                    "date",
+                    "amount",
+                    "account_url",
+                ),
+            },
+        ),
     )
 
-    list_display = ("iteration_deposit_id", "customer_url", "date", "amount", "account_url")
+    list_display = (
+        "iteration_deposit_id",
+        "customer_url",
+        "date",
+        "amount",
+        "account_url",
+    )
 
     def customer_url(self, obj):
         customer = obj.account.customer
-        url = reverse(f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change", args=[customer.id])
+        url = reverse(
+            f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change",
+            args=[customer.id],
+        )
         return format_html(f'<a href="{url}">{customer.name}, {customer.address}</a>')
 
     def iteration_deposit_id(self, obj):
-        url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
+        url = reverse(
+            f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id]
+        )
         return format_html(f'<a href="{url}">{obj.id}</a>')
 
     def account_url(self, obj):
         account = obj.account
-        url = reverse(f"admin:{account._meta.app_label}_{account._meta.model_name}_change", args=[account.id])
+        url = reverse(
+            f"admin:{account._meta.app_label}_{account._meta.model_name}_change",
+            args=[account.id],
+        )
         return format_html(f'<a href="{url}">{account.pk}</a>')
 
 

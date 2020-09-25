@@ -1,5 +1,5 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 # Create your models here.
 
@@ -34,9 +34,7 @@ class Iteration(BaseModel):
     day_of_payment = models.IntegerField()
 
     def __str__(self):
-        return "Iteration Id: {}, Start Date: {}".format(
-            self.pk, self.start_date
-        )
+        return "Iteration Id: {}, Start Date: {}".format(self.pk, self.start_date)
 
     class Meta:
         db_table = "iteration"
@@ -50,7 +48,9 @@ class Customer(BaseModel):
     phone_number = models.CharField(max_length=10)
 
     def __str__(self):
-        return "{}, {}, {}, Customer Id: {}".format(self.name, self.address, self.phone_number, self.pk)
+        return "{}, {}, {}, Customer Id: {}".format(
+            self.name, self.address, self.phone_number, self.pk
+        )
 
     class Meta:
         db_table = "customers"
@@ -59,8 +59,12 @@ class Customer(BaseModel):
 
 
 class Account(BaseModel):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="accounts")
-    iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE, related_name="accounts")
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name="accounts"
+    )
+    iteration = models.ForeignKey(
+        Iteration, on_delete=models.CASCADE, related_name="accounts"
+    )
 
     def __str__(self):
         return "{}, {}, Account Id: {}".format(self.customer, self.iteration, self.pk)
@@ -74,11 +78,15 @@ class Account(BaseModel):
 class IterationDeposit(BaseModel):
     date = models.DateField()
     amount = models.IntegerField()
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="deposits")
+    account = models.ForeignKey(
+        Account, on_delete=models.CASCADE, related_name="deposits"
+    )
 
     def __str__(self):
         customer = self.account.customer
-        return "{}, {}, {}, Account Id: {}".format(customer.name, self.amount, self.date, self.account.pk)
+        return "{}, {}, {}, Account Id: {}".format(
+            customer.name, self.amount, self.date, self.account.pk
+        )
 
     class Meta:
         db_table = "iteration_deposits"
@@ -87,8 +95,12 @@ class IterationDeposit(BaseModel):
 
 
 class Loan(BaseModel):
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="loans")
-    iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE, related_name="loans")
+    customer = models.ForeignKey(
+        Customer, on_delete=models.CASCADE, related_name="loans"
+    )
+    iteration = models.ForeignKey(
+        Iteration, on_delete=models.CASCADE, related_name="loans"
+    )
     amount = models.IntegerField()
 
     def __str__(self):
@@ -106,7 +118,9 @@ class LoanDeposit(BaseModel):
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="deposits")
 
     def __str__(self):
-        return "{}, {}, {}, Loan Deposit Id: {}".format(self.loan.pk, self.amount, self.date, self.pk)
+        return "{}, {}, {}, Loan Deposit Id: {}".format(
+            self.loan.pk, self.amount, self.date, self.pk
+        )
 
     class Meta:
         db_table = "loan_deposits"
