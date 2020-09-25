@@ -74,7 +74,7 @@ class Account(BaseModel):
 class IterationDeposit(BaseModel):
     date = models.DateField()
     amount = models.IntegerField()
-    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="deposits")
 
     def __str__(self):
         customer = self.account.customer

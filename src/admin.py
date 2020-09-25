@@ -38,7 +38,7 @@ class AccountAdmin(admin.ModelAdmin):
             'fields': ('created_by', 'modified_by', "id", 'customer', 'iteration', 'number_of_accounts',),
         }),
     )
-    list_display = ("account_id", "customer_url", "iteration")
+    list_display = ("account_id", "customer_url", "iteration", "account_deposits_url")
     list_filter = ("customer__address",)
 
     def customer_url(self, obj):
@@ -49,6 +49,14 @@ class AccountAdmin(admin.ModelAdmin):
     def account_id(self, obj):
         url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
         return format_html(f'<a href="{url}">{obj.pk}</a>')
+
+    def account_deposits_url(self, obj):
+        deposits = obj.deposits.count()
+        if deposits > 0:
+            url = reverse(f"admin:src_loandeposit_changelist") + f"?account__id__exact={obj.id}"
+            return format_html(f'<a href="{url}">{deposits}</a>')
+        else:
+            return 0
 
 class CustomerAdmin(admin.ModelAdmin):
 
@@ -62,10 +70,20 @@ class CustomerAdmin(admin.ModelAdmin):
     list_filter = ("address",)
 
     def number_of_accounts(self, obj):
-        return obj.accounts.count()
+        accounts = obj.accounts.count()
+        if accounts > 0:
+            url = reverse(f"admin:src_account_changelist") + f"?customer__id__exact={obj.id}"
+            return format_html(f'<a href="{url}">{obj.accounts.count()}</a>')
+        else:
+            return 0
 
     def number_of_loans(self, obj):
-        return obj.loans.count()
+        accounts = obj.loans.count()
+        if accounts > 0:
+            url = reverse(f"admin:src_loan_changelist") + f"?customer__id__exact={obj.id}"
+            return format_html(f'<a href="{url}">{obj.loans.count()}</a>')
+        else:
+            return 0
 
     def iteration_dues(self, obj):
         total_iteration_dues = 0
@@ -102,7 +120,7 @@ class LoanAdmin(admin.ModelAdmin):
             'fields': ('created_by', 'modified_by', 'customer', 'iteration', 'amount',),
         }),
     )
-    list_display = ("loan_url", "customer_url", "iteration", "amount")
+    list_display = ("loan_url", "customer_url", "iteration", "amount", "loan_deposits_url")
     list_filter = ("customer__address",)
 
     def loan_url(self, obj):
@@ -113,6 +131,14 @@ class LoanAdmin(admin.ModelAdmin):
         customer = obj.customer
         url = reverse(f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change", args=[customer.id])
         return format_html(f'<a href="{url}">{customer.name}, {customer.address}</a>')
+
+    def loan_deposits_url(self, obj):
+        deposits = obj.deposits.count()
+        if deposits > 0:
+            url = reverse(f"admin:src_loandeposit_changelist") + f"?loan__id__exact={obj.id}"
+            return format_html(f'<a href="{url}">{deposits}</a>')
+        else:
+            return 0
 
 
 class LoanDepositAdmin(admin.ModelAdmin):
@@ -159,7 +185,7 @@ class IterationDepositAdmin(admin.ModelAdmin):
     def iteration_deposit_id(self, obj):
         url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
         return format_html(f'<a href="{url}">{obj.id}</a>')
-        
+
     def account_url(self, obj):
         account = obj.account
         url = reverse(f"admin:{account._meta.app_label}_{account._meta.model_name}_change", args=[account.id])
