@@ -8,9 +8,7 @@ class BaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        related_name="%(class)s_createdby",
-        on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL, related_name="%(class)s_createdby", on_delete=models.CASCADE,
     )
     modified_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -59,12 +57,8 @@ class Customer(BaseModel):
 
 
 class Account(BaseModel):
-    customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="accounts"
-    )
-    iteration = models.ForeignKey(
-        Iteration, on_delete=models.CASCADE, related_name="accounts"
-    )
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="accounts")
+    iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE, related_name="accounts")
 
     def __str__(self):
         return "{}, {}, Account Id: {}".format(self.customer, self.iteration, self.pk)
@@ -78,9 +72,7 @@ class Account(BaseModel):
 class IterationDeposit(BaseModel):
     date = models.DateField()
     amount = models.IntegerField()
-    account = models.ForeignKey(
-        Account, on_delete=models.CASCADE, related_name="deposits"
-    )
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="deposits")
 
     def __str__(self):
         customer = self.account.customer
@@ -95,12 +87,8 @@ class IterationDeposit(BaseModel):
 
 
 class Loan(BaseModel):
-    customer = models.ForeignKey(
-        Customer, on_delete=models.CASCADE, related_name="loans"
-    )
-    iteration = models.ForeignKey(
-        Iteration, on_delete=models.CASCADE, related_name="loans"
-    )
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="loans")
+    iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE, related_name="loans")
     amount = models.IntegerField()
 
     def __str__(self):

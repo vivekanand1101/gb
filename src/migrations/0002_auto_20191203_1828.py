@@ -15,9 +15,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name="useraccount",
-            options={
-                "verbose_name": "User Account",
-                "verbose_name_plural": "User Accounts",
-            },
+            options={"verbose_name": "User Account", "verbose_name_plural": "User Accounts"},
         ),
     ]
