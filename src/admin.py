@@ -54,6 +54,7 @@ class AccountAdmin(admin.ModelAdmin):
     )
     list_display = ("account_id", "customer_url", "iteration", "account_deposits_url")
     list_filter = ("customer__address",)
+    search_fields = ("id", "customer__name", "customer__address")
 
     def customer_url(self, obj):
         customer = obj.customer
@@ -98,6 +99,7 @@ class CustomerAdmin(admin.ModelAdmin):
     )
 
     list_filter = ("address",)
+    search_fields = ("id", "name", "address")
 
     def number_of_accounts(self, obj):
         accounts = obj.accounts.count()
@@ -160,6 +162,7 @@ class LoanAdmin(admin.ModelAdmin):
         "loan_deposits_url",
     )
     list_filter = ("customer__address",)
+    search_fields = ("id", "customer__name", "customer__address")
 
     def loan_url(self, obj):
         url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
@@ -189,6 +192,7 @@ class LoanDepositAdmin(admin.ModelAdmin):
     )  # noqa: E231
 
     list_display = ("loan_deposit_id", "customer_url", "date", "amount", "loan_url")
+    search_fields = ("id", "loan__customer__name", "loan__customer__address")
 
     def customer_url(self, obj):
         customer = obj.loan.customer
@@ -236,6 +240,7 @@ class IterationDepositAdmin(admin.ModelAdmin):
         "amount",
         "account_url",
     )
+    search_fields = ("id", "account__customer__name", "account__customer__address")
 
     def customer_url(self, obj):
         customer = obj.account.customer
