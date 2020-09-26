@@ -50,7 +50,7 @@ class AccountForm(forms.ModelForm):
 
 class AccountAdmin(admin.ModelAdmin):
 
-    form = AccountForm
+    add_form = AccountForm
 
     fieldsets = (
         (
