@@ -71,7 +71,9 @@ class AccountAdmin(admin.ModelAdmin):
     def account_deposits_url(self, obj):
         deposits = obj.deposits.count()
         if deposits > 0:
-            url = reverse(f"admin:src_loandeposit_changelist") + f"?account__id__exact={obj.id}"
+            url = (
+                reverse(f"admin:src_iterationdeposit_changelist") + f"?account__id__exact={obj.id}"
+            )
             return format_html(f'<a href="{url}">{deposits}</a>')
         else:
             return 0
