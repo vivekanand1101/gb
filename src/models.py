@@ -69,7 +69,7 @@ class Account(BaseModel):
         verbose_name_plural = "Accounts"
 
 
-class IterationDeposit(BaseModel):
+class AccountDeposit(BaseModel):
     date = models.DateField()
     amount = models.IntegerField()
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="deposits")
@@ -81,9 +81,9 @@ class IterationDeposit(BaseModel):
         )
 
     class Meta:
-        db_table = "iteration_deposits"
-        verbose_name = "Iteration Deposit"
-        verbose_name_plural = "Iteration Deposits"
+        db_table = "account_deposits"
+        verbose_name = "Account Deposit"
+        verbose_name_plural = "Account Deposits"
 
 
 class Loan(BaseModel):

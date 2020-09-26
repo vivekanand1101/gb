@@ -4,9 +4,9 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 from src.models import Account
+from src.models import AccountDeposit
 from src.models import Customer
 from src.models import Iteration
-from src.models import IterationDeposit
 from src.models import Loan
 from src.models import LoanDeposit
 
@@ -71,9 +71,7 @@ class AccountAdmin(admin.ModelAdmin):
     def account_deposits_url(self, obj):
         deposits = obj.deposits.count()
         if deposits > 0:
-            url = (
-                reverse(f"admin:src_iterationdeposit_changelist") + f"?account__id__exact={obj.id}"
-            )
+            url = reverse(f"admin:src_accountdeposit_changelist") + f"?account__id__exact={obj.id}"
             return format_html(f'<a href="{url}">{deposits}</a>')
         else:
             return 0
@@ -130,7 +128,7 @@ class CustomerAdmin(admin.ModelAdmin):
             # total_days = diff.days
             # import pdb; pdb.set_trace()
             # total_dues = (total_months * iteration.deposit_amount) + (total_days * iteration.late_deposit_fine)
-            iteration_deposits = IterationDeposit.objects.filter(account=account).all()
+            iteration_deposits = AccountDeposit.objects.filter(account=account).all()
             total_deposit = 0
             total_days_late = 0
             for deposit in iteration_deposits:
@@ -216,7 +214,7 @@ class LoanDepositAdmin(admin.ModelAdmin):
         return format_html(f'<a href="{url}">{loan.pk}</a>')
 
 
-class IterationDepositAdmin(admin.ModelAdmin):
+class AccountDepositAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (
@@ -269,4 +267,4 @@ admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Account, AccountAdmin)
 admin.site.register(Loan, LoanAdmin)
 admin.site.register(LoanDeposit, LoanDepositAdmin)
-admin.site.register(IterationDeposit, IterationDepositAdmin)
+admin.site.register(AccountDeposit, AccountDepositAdmin)
