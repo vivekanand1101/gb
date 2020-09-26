@@ -176,12 +176,7 @@ class CustomerAdmin(admin.ModelAdmin):
 class LoanAdmin(admin.ModelAdmin):
 
     fieldsets = (
-        (
-            None,
-            {
-                "fields": ("created_by", "modified_by", "customer", "iteration", "amount",),
-            },  # noqa: E231
-        ),
+        (None, {"fields": ("created_by", "modified_by", "customer", "iteration", "amount")},),
     )
     list_display = (
         "loan_url",
@@ -218,7 +213,7 @@ class LoanAdmin(admin.ModelAdmin):
 class LoanDepositAdmin(admin.ModelAdmin):
 
     fieldsets = (
-        (None, {"fields": ("created_by", "modified_by", "loan", "date", "amount"),}),  # noqa: E231
+        (None, {"fields": ("created_by", "modified_by", "loan", "date", "amount")}),
     )  # noqa: E231
 
     list_display = ("loan_deposit_id", "customer_url", "date", "amount", "loan_url")
