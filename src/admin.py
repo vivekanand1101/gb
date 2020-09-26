@@ -11,6 +11,21 @@ from src.models import Loan
 from src.models import LoanDeposit
 
 
+class SuperUserAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return False
+
+
 class AccountForm(forms.ModelForm):
 
     number_of_accounts = forms.CharField()
@@ -44,7 +59,6 @@ class AccountAdmin(admin.ModelAdmin):
                 "fields": (
                     "created_by",
                     "modified_by",
-                    "id",
                     "customer",
                     "iteration",
                     "number_of_accounts",
@@ -54,7 +68,21 @@ class AccountAdmin(admin.ModelAdmin):
     )
     list_display = ("account_id", "customer_url", "iteration", "account_deposits_url")
     list_filter = ("customer__address",)
-    search_fields = ("id", "customer__name", "customer__address")
+    search_fields = ("=id", "customer__name", "customer__address")
+    readonly_fields = tuple()
+    list_per_page = 50
+
+    # def get_readonly_fields(self, request, obj):
+    #     if obj:
+    #         readonly_fields = ("number_of_accounts", )
+    #         return readonly_fields
+    #     else:
+    #         return tuple()
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj is None:
+            kwargs["form"] = self.add_form
+        return super().get_form(request, obj, **kwargs)
 
     def customer_url(self, obj):
         customer = obj.customer
@@ -100,6 +128,7 @@ class CustomerAdmin(admin.ModelAdmin):
 
     list_filter = ("address",)
     search_fields = ("id", "name", "address")
+    list_per_page = 50
 
     def number_of_accounts(self, obj):
         accounts = obj.accounts.count()
@@ -163,6 +192,7 @@ class LoanAdmin(admin.ModelAdmin):
     )
     list_filter = ("customer__address",)
     search_fields = ("id", "customer__name", "customer__address")
+    list_per_page = 50
 
     def loan_url(self, obj):
         url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
@@ -193,6 +223,7 @@ class LoanDepositAdmin(admin.ModelAdmin):
 
     list_display = ("loan_deposit_id", "customer_url", "date", "amount", "loan_url")
     search_fields = ("id", "loan__customer__name", "loan__customer__address")
+    list_per_page = 50
 
     def customer_url(self, obj):
         customer = obj.loan.customer
@@ -217,21 +248,8 @@ class LoanDepositAdmin(admin.ModelAdmin):
 class AccountDepositAdmin(admin.ModelAdmin):
 
     fieldsets = (
-        (
-            None,
-            {
-                "fields": (
-                    "created_by",
-                    "modified_by",
-                    "iteration_deposit_id",
-                    "customer_url",
-                    "date",
-                    "amount",
-                    "account_url",
-                ),
-            },
-        ),
-    )
+        (None, {"fields": ("created_by", "modified_by", "date", "amount", "account")}),
+    )  # noqa: E231
 
     list_display = (
         "iteration_deposit_id",
@@ -241,6 +259,8 @@ class AccountDepositAdmin(admin.ModelAdmin):
         "account_url",
     )
     search_fields = ("id", "account__customer__name", "account__customer__address")
+    raw_id_fields = ("account",)
+    list_per_page = 50
 
     def customer_url(self, obj):
         customer = obj.account.customer
