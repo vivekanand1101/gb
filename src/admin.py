@@ -71,6 +71,8 @@ class AccountAdmin(admin.ModelAdmin):
     search_fields = ("=id", "customer__name", "customer__address")
     readonly_fields = tuple()
     list_per_page = 50
+    # raw_id_fields = ("customer",)
+    autocomplete_fields = ("customer",)
 
     # def get_readonly_fields(self, request, obj):
     #     if obj:
@@ -105,27 +107,68 @@ class AccountAdmin(admin.ModelAdmin):
             return 0
 
 
+class AccountDepositAdmin(admin.ModelAdmin):
+
+    fieldsets = ((None, {"fields": ("created_by", "modified_by", "date", "amount", "account")}),)
+
+    list_display = (
+        "account_deposit_id",
+        "customer_url",
+        "date",
+        "amount",
+        "account_url",
+    )
+    search_fields = ("id", "account__customer__name", "account__customer__address")
+    raw_id_fields = ("account",)
+    list_per_page = 50
+
+    def customer_url(self, obj):
+        customer = obj.account.customer
+        url = reverse(
+            f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change",
+            args=[customer.id],
+        )
+        return format_html(
+            f'<a href="{url}">{customer.name}, {customer.address}, {customer.id}</a>'
+        )
+
+    def account_deposit_id(self, obj):
+        url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
+        return format_html(f'<a href="{url}">{obj.id}</a>')
+
+    def account_url(self, obj):
+        account = obj.account
+        url = reverse(
+            f"admin:{account._meta.app_label}_{account._meta.model_name}_change", args=[account.id],
+        )
+        return format_html(f'<a href="{url}">{account.pk}</a>')
+
+
 class CustomerAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {"fields": ("created_by", "modified_by", "name", "address", "phone_number")},),
     )
     list_display = (
+        "customer_id",
         "name",
         "address",
         "phone_number",
-        "number_of_accounts",
-        "number_of_loans",
-        "iteration_dues",
+        "accounts",
+        "loans",
+        "account_dues",
         "loan_dues",
         "total_dues",
     )
 
     list_filter = ("address",)
-    search_fields = ("id", "name", "address")
+    search_fields = ("id", "name", "address", "phone_number")
     list_per_page = 50
 
-    def number_of_accounts(self, obj):
+    def customer_id(self, obj):
+        return obj.id
+
+    def accounts(self, obj):
         accounts = obj.accounts.count()
         if accounts > 0:
             url = reverse(f"admin:src_account_changelist") + f"?customer__id__exact={obj.id}"
@@ -133,7 +176,7 @@ class CustomerAdmin(admin.ModelAdmin):
         else:
             return 0
 
-    def number_of_loans(self, obj):
+    def loans(self, obj):
         accounts = obj.loans.count()
         if accounts > 0:
             url = reverse(f"admin:src_loan_changelist") + f"?customer__id__exact={obj.id}"
@@ -141,7 +184,7 @@ class CustomerAdmin(admin.ModelAdmin):
         else:
             return 0
 
-    def iteration_dues(self, obj):
+    def account_dues(self, obj):
         total_iteration_dues = 0
         # current_date = datetime.today().date()
         for account in obj.accounts.all():
@@ -165,7 +208,7 @@ class CustomerAdmin(admin.ModelAdmin):
         return 0
 
     def total_dues(self, obj):
-        return self.iteration_dues(obj) + self.loan_dues(obj)
+        return self.account_dues(obj) + self.loan_dues(obj)
 
 
 class LoanAdmin(admin.ModelAdmin):
@@ -181,8 +224,9 @@ class LoanAdmin(admin.ModelAdmin):
         "loan_deposits_url",
     )
     list_filter = ("customer__address",)
-    search_fields = ("id", "customer__name", "customer__address")
+    search_fields = ("id", "customer__name", "customer__address", "customer__phone_number")
     list_per_page = 50
+    autocomplete_fields = ("customer",)
 
     def loan_url(self, obj):
         url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
@@ -194,7 +238,9 @@ class LoanAdmin(admin.ModelAdmin):
             f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change",
             args=[customer.id],
         )
-        return format_html(f'<a href="{url}">{customer.name}, {customer.address}</a>')
+        return format_html(
+            f'<a href="{url}">{customer.name}, {customer.address}, {customer.id}</a>'
+        )
 
     def loan_deposits_url(self, obj):
         deposits = obj.deposits.count()
@@ -210,8 +256,9 @@ class LoanDepositAdmin(admin.ModelAdmin):
     fieldsets = ((None, {"fields": ("created_by", "modified_by", "loan", "date", "amount")}),)
 
     list_display = ("loan_deposit_id", "customer_url", "date", "amount", "loan_url")
-    search_fields = ("id", "loan__customer__name", "loan__customer__address")
+    search_fields = ("id", "loan__id", "loan__customer__name", "loan__customer__address")
     list_per_page = 50
+    autocomplete_fields = ("loan",)
 
     def customer_url(self, obj):
         customer = obj.loan.customer
@@ -219,7 +266,9 @@ class LoanDepositAdmin(admin.ModelAdmin):
             f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change",
             args=[customer.id],
         )
-        return format_html(f'<a href="{url}">{customer.name}, {customer.address}</a>')
+        return format_html(
+            f'<a href="{url}">{customer.name}, {customer.address}, {customer.id}</a>'
+        )
 
     def loan_deposit_id(self, obj):
         url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
@@ -231,41 +280,6 @@ class LoanDepositAdmin(admin.ModelAdmin):
             f"admin:{loan._meta.app_label}_{loan._meta.model_name}_change", args=[loan.id],
         )
         return format_html(f'<a href="{url}">{loan.pk}</a>')
-
-
-class AccountDepositAdmin(admin.ModelAdmin):
-
-    fieldsets = ((None, {"fields": ("created_by", "modified_by", "date", "amount", "account")}),)
-
-    list_display = (
-        "iteration_deposit_id",
-        "customer_url",
-        "date",
-        "amount",
-        "account_url",
-    )
-    search_fields = ("id", "account__customer__name", "account__customer__address")
-    raw_id_fields = ("account",)
-    list_per_page = 50
-
-    def customer_url(self, obj):
-        customer = obj.account.customer
-        url = reverse(
-            f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change",
-            args=[customer.id],
-        )
-        return format_html(f'<a href="{url}">{customer.name}, {customer.address}</a>')
-
-    def iteration_deposit_id(self, obj):
-        url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
-        return format_html(f'<a href="{url}">{obj.id}</a>')
-
-    def account_url(self, obj):
-        account = obj.account
-        url = reverse(
-            f"admin:{account._meta.app_label}_{account._meta.model_name}_change", args=[account.id],
-        )
-        return format_html(f'<a href="{url}">{account.pk}</a>')
 
 
 admin.site.register(Iteration)

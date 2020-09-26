@@ -92,7 +92,7 @@ class Loan(BaseModel):
     amount = models.IntegerField()
 
     def __str__(self):
-        return "{}".format(self.pk)
+        return "Loan Id: {}, {}".format(self.pk, self.customer)
 
     class Meta:
         db_table = "loans"
