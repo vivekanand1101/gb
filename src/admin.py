@@ -70,6 +70,7 @@ class AccountAdmin(admin.ModelAdmin):
         "account_id",
         "customer_url",
         "iteration",
+        "dues",
         "account_deposits",
         "last_deposit_date",
         "new_deposits",
@@ -80,10 +81,13 @@ class AccountAdmin(admin.ModelAdmin):
     list_per_page = 50
     autocomplete_fields = ("customer",)
 
+    def dues(self, obj):
+        return 0
+
     def last_deposit_date(self, obj):
-        objs = obj.deposits.order_by("-id")
+        objs = obj.deposits.order_by("-date")
         if objs.count() > 0:
-            return objs[0].created_at.date()
+            return objs[0].date
         return None
 
     def get_form(self, request, obj=None, **kwargs):
@@ -240,12 +244,23 @@ class LoanAdmin(admin.ModelAdmin):
         "customer_url",
         "iteration",
         "amount",
+        "dues",
         "loan_deposits_url",
+        "last_deposit_date",
     )
     list_filter = ("customer__address",)
     search_fields = ("=id", "customer__name", "customer__address", "customer__phone_number")
     list_per_page = 50
     autocomplete_fields = ("customer",)
+
+    def dues(self, obj):
+        return 0
+
+    def last_deposit_date(self, obj):
+        objs = obj.deposits.order_by("-date")
+        if objs.count() > 0:
+            return objs[0].date
+        return None
 
     def loan_url(self, obj):
         url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
