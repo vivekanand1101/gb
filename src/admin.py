@@ -108,12 +108,7 @@ class AccountAdmin(admin.ModelAdmin):
 class CustomerAdmin(admin.ModelAdmin):
 
     fieldsets = (
-        (
-            None,
-            {
-                "fields": ("created_by", "modified_by", "name", "address", "phone_number",),
-            },  # noqa: E231
-        ),
+        (None, {"fields": ("created_by", "modified_by", "name", "address", "phone_number")},),
     )
     list_display = (
         "name",
@@ -212,9 +207,7 @@ class LoanAdmin(admin.ModelAdmin):
 
 class LoanDepositAdmin(admin.ModelAdmin):
 
-    fieldsets = (
-        (None, {"fields": ("created_by", "modified_by", "loan", "date", "amount")}),
-    )  # noqa: E231
+    fieldsets = ((None, {"fields": ("created_by", "modified_by", "loan", "date", "amount")}),)
 
     list_display = ("loan_deposit_id", "customer_url", "date", "amount", "loan_url")
     search_fields = ("id", "loan__customer__name", "loan__customer__address")
@@ -242,9 +235,7 @@ class LoanDepositAdmin(admin.ModelAdmin):
 
 class AccountDepositAdmin(admin.ModelAdmin):
 
-    fieldsets = (
-        (None, {"fields": ("created_by", "modified_by", "date", "amount", "account")}),
-    )  # noqa: E231
+    fieldsets = ((None, {"fields": ("created_by", "modified_by", "date", "amount", "account")}),)
 
     list_display = (
         "iteration_deposit_id",
