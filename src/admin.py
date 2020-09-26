@@ -66,20 +66,25 @@ class AccountAdmin(admin.ModelAdmin):
             },
         ),
     )
-    list_display = ("account_id", "customer_url", "iteration", "account_deposits_url")
+    list_display = (
+        "account_id",
+        "customer_url",
+        "iteration",
+        "account_deposits",
+        "last_deposit_date",
+        "new_deposits",
+    )
     list_filter = ("customer__address",)
     search_fields = ("=id", "customer__name", "customer__address")
     readonly_fields = tuple()
     list_per_page = 50
-    # raw_id_fields = ("customer",)
     autocomplete_fields = ("customer",)
 
-    # def get_readonly_fields(self, request, obj):
-    #     if obj:
-    #         readonly_fields = ("number_of_accounts", )
-    #         return readonly_fields
-    #     else:
-    #         return tuple()
+    def last_deposit_date(self, obj):
+        objs = obj.deposits.order_by("-id")
+        if objs.count() > 0:
+            return objs[0].created_at.date()
+        return None
 
     def get_form(self, request, obj=None, **kwargs):
         if obj is None:
@@ -98,13 +103,17 @@ class AccountAdmin(admin.ModelAdmin):
         url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
         return format_html(f'<a href="{url}">{obj.pk}</a>')
 
-    def account_deposits_url(self, obj):
+    def account_deposits(self, obj):
         deposits = obj.deposits.count()
         if deposits > 0:
             url = reverse(f"admin:src_accountdeposit_changelist") + f"?account__id__exact={obj.id}"
             return format_html(f'<a href="{url}">{deposits}</a>')
         else:
             return 0
+
+    def new_deposits(self, obj):
+        url = reverse(f"admin:src_accountdeposit_add") + f"?account__id__exact={obj.id}"
+        return format_html(f'<a href="{url}">Add New Deposit</a>')
 
 
 class AccountDepositAdmin(admin.ModelAdmin):
@@ -118,8 +127,8 @@ class AccountDepositAdmin(admin.ModelAdmin):
         "amount",
         "account_url",
     )
-    search_fields = ("id", "account__customer__name", "account__customer__address")
-    raw_id_fields = ("account",)
+    search_fields = ("=id", "account__customer__name", "account__customer__address")
+    autocomplete_fields = ("account",)
     list_per_page = 50
 
     def customer_url(self, obj):
@@ -159,11 +168,21 @@ class CustomerAdmin(admin.ModelAdmin):
         "account_dues",
         "loan_dues",
         "total_dues",
+        "account",
+        "loan",
     )
 
     list_filter = ("address",)
-    search_fields = ("id", "name", "address", "phone_number")
+    search_fields = ("=id", "name", "address", "phone_number")
     list_per_page = 50
+
+    def account(self, obj):
+        url = reverse(f"admin:src_account_add")
+        return format_html(f'<a href="{url}">New</a>')
+
+    def loan(self, obj):
+        url = reverse(f"admin:src_loan_add")
+        return format_html(f'<a href="{url}">New</a>')
 
     def customer_id(self, obj):
         return obj.id
@@ -224,7 +243,7 @@ class LoanAdmin(admin.ModelAdmin):
         "loan_deposits_url",
     )
     list_filter = ("customer__address",)
-    search_fields = ("id", "customer__name", "customer__address", "customer__phone_number")
+    search_fields = ("=id", "customer__name", "customer__address", "customer__phone_number")
     list_per_page = 50
     autocomplete_fields = ("customer",)
 
@@ -256,7 +275,7 @@ class LoanDepositAdmin(admin.ModelAdmin):
     fieldsets = ((None, {"fields": ("created_by", "modified_by", "loan", "date", "amount")}),)
 
     list_display = ("loan_deposit_id", "customer_url", "date", "amount", "loan_url")
-    search_fields = ("id", "loan__id", "loan__customer__name", "loan__customer__address")
+    search_fields = ("=id", "loan__id", "loan__customer__name", "loan__customer__address")
     list_per_page = 50
     autocomplete_fields = ("loan",)
 
