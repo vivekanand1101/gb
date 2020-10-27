@@ -7,6 +7,7 @@ from django.utils.html import format_html
 
 from src.models import Account
 from src.models import AccountDeposit
+from src.models import Address
 from src.models import Customer
 from src.models import Iteration
 from src.models import Loan
@@ -342,3 +343,4 @@ admin.site.register(Account, AccountAdmin)
 admin.site.register(Loan, LoanAdmin)
 admin.site.register(LoanDeposit, LoanDepositAdmin)
 admin.site.register(AccountDeposit, AccountDepositAdmin)
+admin.site.register(Address)
