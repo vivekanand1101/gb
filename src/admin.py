@@ -1,5 +1,6 @@
-# from datetime import datetime
-# from dateutil import relativedelta
+from datetime import datetime
+
+from dateutil import relativedelta
 from django import forms
 from django.contrib import admin
 from django.urls import reverse
@@ -85,23 +86,26 @@ class AccountAdmin(admin.ModelAdmin):
     autocomplete_fields = ("customer",)
 
     def dues(self, obj):
-        # deposits = obj.deposits
-        # iteration = obj.iteration
-        # current_date = datetime.today().date()
-        # start_date = iteration.start_date
-        # diff = relativedelta.relativedelta(current_date, start_date)
-        # total_months = (diff.years * 12) + (diff.months)
-        # installments = []
-        # for i in range(1, total_months + 1):
-        #     due_date = start_date + relativedelta.relativedelta(months=i)
-        #     amount_paid = 0
-        #     for deposit in deposits:
-        #         if due_date == deposit.date:
-        #             amount_paid = deposit.amount
-        #     if amount_paid == 0:
-        #         pass
-        #     installments.append()
-        return 0
+        deposits = obj.deposits.all()
+        iteration = obj.iteration
+        current_date = datetime.today().date()
+        start_date = iteration.start_date
+        diff = relativedelta.relativedelta(current_date, start_date)
+        total_months = (diff.years * 12) + (diff.months)
+        if diff.days > 0:
+            total_months += 1
+        total_principal_paid = sum([deposit.principal for deposit in deposits])
+        total_installments_paid = int(total_principal_paid / iteration.deposit_amount)
+        total_installments_missed = max(total_months - total_installments_paid, 0)
+        return int(
+            (
+                total_installments_missed
+                * iteration.deposit_amount
+                * (100 + iteration.late_deposit_fine)
+                * (100 + iteration.interest_rate)
+            )
+            / (100 * 100)
+        )
 
     def last_deposit_date(self, obj):
         objs = obj.deposits.order_by("-date")
