@@ -1,5 +1,4 @@
 1. Receipt
-10. Add status in loan -> pending and approved
 2. bina principal waala adjustment loan
 3. dues calculation
 4. account dues to be split in 2 parts - principal, penalty
@@ -8,3 +7,5 @@
 7. Dues list generate -> account, loan, all
 8. acl included monitoring, benefit
 9. Backup
+10. Add status in loan -> pending and approved -> done
+11. Address as separate table -> done
