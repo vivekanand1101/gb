@@ -317,6 +317,7 @@ class LoanAdmin(admin.ModelAdmin):
         if principal:
             return int(total_principal_dues)
         total_installments_dues = int(total_principal_dues / (obj.amount * 0.1))
+        total_installments_dues = max(total_installments_dues, 1)
         total_interest = (
             total_installments_dues
             * (obj.amount - total_principal_paid)
