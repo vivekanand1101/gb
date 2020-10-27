@@ -69,8 +69,8 @@ class AccountAdmin(admin.ModelAdmin):
         "last_deposit_date",
         "new_deposits",
     )
-    list_filter = ("customer__address",)
-    search_fields = ("=id", "customer__name", "customer__address")
+    list_filter = ("customer__address__name",)
+    search_fields = ("=id", "customer__name", "customer__address__name")
     readonly_fields = ("installments",)
     list_per_page = 50
     autocomplete_fields = ("customer",)
@@ -102,7 +102,7 @@ class AccountAdmin(admin.ModelAdmin):
             f"admin:{customer._meta.app_label}_{customer._meta.model_name}_change",
             args=[customer.id],
         )
-        return format_html(f'<a href="{url}">{customer.name}, {customer.address}</a>')
+        return format_html(f'<a href="{url}">{customer.name}, {customer.address.name}</a>')
 
     def account_id(self, obj):
         url = reverse(f"admin:{obj._meta.app_label}_{obj._meta.model_name}_change", args=[obj.id])
@@ -138,7 +138,7 @@ class AccountDepositAdmin(admin.ModelAdmin):
         "penalty",
         "account_url",
     )
-    search_fields = ("=id", "account__customer__name", "account__customer__address")
+    search_fields = ("=id", "account__customer__name", "account__customer__address__name")
     autocomplete_fields = ("account",)
     list_per_page = 50
 
@@ -149,7 +149,7 @@ class AccountDepositAdmin(admin.ModelAdmin):
             args=[customer.id],
         )
         return format_html(
-            f'<a href="{url}">{customer.name}, {customer.address}, {customer.id}</a>'
+            f'<a href="{url}">{customer.name}, {customer.address.name}, {customer.id}</a>'
         )
 
     def account_deposit_id(self, obj):
@@ -184,7 +184,7 @@ class CustomerAdmin(admin.ModelAdmin):
     )
 
     list_filter = ("address",)
-    search_fields = ("=id", "name", "address", "phone_number")
+    search_fields = ("=id", "name", "address__name", "phone_number")
     list_per_page = 50
 
     def account(self, obj):
@@ -263,8 +263,8 @@ class LoanAdmin(admin.ModelAdmin):
         "last_deposit_date",
         "status",
     )
-    list_filter = ("customer__address",)
-    search_fields = ("=id", "customer__name", "customer__address", "customer__phone_number")
+    list_filter = ("customer__address__name",)
+    search_fields = ("=id", "customer__name", "customer__address__name", "customer__phone_number")
     list_per_page = 50
     autocomplete_fields = ("customer",)
     readonly_fields = ("installments",)
@@ -345,7 +345,7 @@ class LoanDepositAdmin(admin.ModelAdmin):
         "penalty",
         "loan_url",
     )
-    search_fields = ("=id", "loan__id", "loan__customer__name", "loan__customer__address")
+    search_fields = ("=id", "loan__id", "loan__customer__name", "loan__customer__address__name")
     list_per_page = 50
     autocomplete_fields = ("loan",)
 
@@ -356,7 +356,7 @@ class LoanDepositAdmin(admin.ModelAdmin):
             args=[customer.id],
         )
         return format_html(
-            f'<a href="{url}">{customer.name}, {customer.address}, {customer.id}</a>'
+            f'<a href="{url}">{customer.name}, {customer.address.name}, {customer.id}</a>'
         )
 
     def loan_deposit_id(self, obj):
