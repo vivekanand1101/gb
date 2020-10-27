@@ -90,9 +90,14 @@ class Loan(BaseModel):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="loans")
     iteration = models.ForeignKey(Iteration, on_delete=models.CASCADE, related_name="loans")
     amount = models.IntegerField()
+    status = models.CharField(
+        max_length=20,
+        choices=[("PENDING", "PENDING"), ("APPROVED", "APPROVED")],
+        default="APPROVED",
+    )
 
     def __str__(self):
-        return "Loan Id: {}, {}".format(self.pk, self.customer)
+        return "Loan Id: {}, {}, {}".format(self.pk, self.customer, self.status)
 
     class Meta:
         db_table = "loans"

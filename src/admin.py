@@ -1,3 +1,5 @@
+# from datetime import datetime
+# from dateutil import relativedelta
 from django import forms
 from django.contrib import admin
 from django.urls import reverse
@@ -82,6 +84,20 @@ class AccountAdmin(admin.ModelAdmin):
     autocomplete_fields = ("customer",)
 
     def dues(self, obj):
+        # deposits = obj.deposits
+        # iteration = obj.iteration
+        # current_date = datetime.today().date()
+        # start_date = iteration.start_date
+        # diff = relativedelta.relativedelta(current_date, start_date)
+        # total_months = (diff.years * 12) + (diff.months)
+        # remaining_days = diff.days
+        # installments = []
+        # for i in range(1, total_months + 1):
+        #     installments.append(start_date + relativedelta.relativedelta(months=i))
+        # # total_principal = total_months * iteration.deposit_amount
+        # total_amount = 0
+        # for installment in installments:
+        #     pass
         return 0
 
     def last_deposit_date(self, obj):
@@ -237,7 +253,10 @@ class CustomerAdmin(admin.ModelAdmin):
 class LoanAdmin(admin.ModelAdmin):
 
     fieldsets = (
-        (None, {"fields": ("created_by", "modified_by", "customer", "iteration", "amount")},),
+        (
+            None,
+            {"fields": ("created_by", "modified_by", "customer", "iteration", "amount", "status")},
+        ),
     )
     list_display = (
         "loan_url",
@@ -247,6 +266,7 @@ class LoanAdmin(admin.ModelAdmin):
         "dues",
         "loan_deposits_url",
         "last_deposit_date",
+        "status",
     )
     list_filter = ("customer__address",)
     search_fields = ("=id", "customer__name", "customer__address", "customer__phone_number")
