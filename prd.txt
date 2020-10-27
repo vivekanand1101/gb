@@ -7,6 +7,8 @@
 7. Dues list generate -> account, loan, all
 1. Receipt
 8. acl included monitoring, benefit
+12. Installments view for account
+13. Installments view for loan
 6. Bulk actions -> generate Receipt, settle dues
 9. Backup
 2. bina principal waala adjustment loan

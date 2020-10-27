@@ -55,20 +55,7 @@ class AccountAdmin(admin.ModelAdmin):
 
     add_form = AccountForm
 
-    fieldsets = (
-        (
-            None,
-            {
-                "fields": (
-                    "created_by",
-                    "modified_by",
-                    "customer",
-                    "iteration",
-                    "number_of_accounts",
-                ),
-            },
-        ),
-    )
+    fieldsets = ((None, {"fields": ("created_by", "modified_by", "customer", "iteration")},),)
     list_display = (
         "account_id",
         "customer_url",
