@@ -22,6 +22,18 @@ class BaseModel(models.Model):
         abstract = True
 
 
+class Address(BaseModel):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return "address: {}".format(self.name)
+
+    class Meta:
+        db_table = "address"
+        verbose_name = "Address"
+        verbose_name_plural = "Addresses"
+
+
 class Iteration(BaseModel):
     start_date = models.DateField()
     interest_rate = models.IntegerField()

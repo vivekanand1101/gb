@@ -234,10 +234,10 @@ class CustomerAdmin(admin.ModelAdmin):
             # total_days = diff.days
             # import pdb; pdb.set_trace()
             # total_dues = (total_months * iteration.deposit_amount) + (total_days * iteration.late_deposit_fine)
-            iteration_deposits = AccountDeposit.objects.filter(account=account).all()
+            account_deposits = AccountDeposit.objects.filter(account=account).all()
             total_deposit = 0
             total_days_late = 0
-            for deposit in iteration_deposits:
+            for deposit in account_deposits:
                 total_deposit += deposit.amount
                 total_days_late += max((deposit.date.day - iteration.start_date.day), 0)
             # total_iteration_dues += (total_dues - total_deposit)
