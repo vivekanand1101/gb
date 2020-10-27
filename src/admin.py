@@ -91,14 +91,16 @@ class AccountAdmin(admin.ModelAdmin):
         # start_date = iteration.start_date
         # diff = relativedelta.relativedelta(current_date, start_date)
         # total_months = (diff.years * 12) + (diff.months)
-        # remaining_days = diff.days
         # installments = []
         # for i in range(1, total_months + 1):
-        #     installments.append(start_date + relativedelta.relativedelta(months=i))
-        # # total_principal = total_months * iteration.deposit_amount
-        # total_amount = 0
-        # for installment in installments:
-        #     pass
+        #     due_date = start_date + relativedelta.relativedelta(months=i)
+        #     amount_paid = 0
+        #     for deposit in deposits:
+        #         if due_date == deposit.date:
+        #             amount_paid = deposit.amount
+        #     if amount_paid == 0:
+        #         pass
+        #     installments.append()
         return 0
 
     def last_deposit_date(self, obj):
@@ -139,13 +141,19 @@ class AccountAdmin(admin.ModelAdmin):
 
 class AccountDepositAdmin(admin.ModelAdmin):
 
-    fieldsets = ((None, {"fields": ("created_by", "modified_by", "date", "amount", "account")}),)
+    fieldsets = (
+        (
+            None,
+            {"fields": ("created_by", "modified_by", "date", "principal", "penalty", "account")},
+        ),
+    )
 
     list_display = (
         "account_deposit_id",
         "customer_url",
         "date",
-        "amount",
+        "principal",
+        "penalty",
         "account_url",
     )
     search_fields = ("=id", "account__customer__name", "account__customer__address")
@@ -227,21 +235,21 @@ class CustomerAdmin(admin.ModelAdmin):
     def account_dues(self, obj):
         total_iteration_dues = 0
         # current_date = datetime.today().date()
-        for account in obj.accounts.all():
-            iteration = account.iteration
-            # iteration_start_date = iteration.start_date
-            # diff = relativedelta.relativedelta(current_date, iteration_start_date)
-            # total_months = (diff.years * 12) + diff.months
-            # total_days = diff.days
-            # import pdb; pdb.set_trace()
-            # total_dues = (total_months * iteration.deposit_amount) + (total_days * iteration.late_deposit_fine)
-            account_deposits = AccountDeposit.objects.filter(account=account).all()
-            total_deposit = 0
-            total_days_late = 0
-            for deposit in account_deposits:
-                total_deposit += deposit.amount
-                total_days_late += max((deposit.date.day - iteration.start_date.day), 0)
-            # total_iteration_dues += (total_dues - total_deposit)
+        # for account in obj.accounts.all():
+        #     iteration = account.iteration
+        # iteration_start_date = iteration.start_date
+        # diff = relativedelta.relativedelta(current_date, iteration_start_date)
+        # total_months = (diff.years * 12) + diff.months
+        # total_days = diff.days
+        # import pdb; pdb.set_trace()
+        # total_dues = (total_months * iteration.deposit_amount) + (total_days * iteration.late_deposit_fine)
+        # account_deposits = AccountDeposit.objects.filter(account=account).all()
+        # total_deposit = 0
+        # total_days_late = 0
+        # for deposit in account_deposits:
+        #     total_deposit += deposit.amount
+        #     total_days_late += max((deposit.date.day - iteration.start_date.day), 0)
+        # total_iteration_dues += (total_dues - total_deposit)
         return total_iteration_dues
 
     def loan_dues(self, obj):
@@ -308,9 +316,32 @@ class LoanAdmin(admin.ModelAdmin):
 
 class LoanDepositAdmin(admin.ModelAdmin):
 
-    fieldsets = ((None, {"fields": ("created_by", "modified_by", "loan", "date", "amount")}),)
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "created_by",
+                    "modified_by",
+                    "loan",
+                    "date",
+                    "principal",
+                    "interest",
+                    "penalty",
+                )
+            },
+        ),
+    )
 
-    list_display = ("loan_deposit_id", "customer_url", "date", "amount", "loan_url")
+    list_display = (
+        "loan_deposit_id",
+        "customer_url",
+        "date",
+        "principal",
+        "interest",
+        "penalty",
+        "loan_url",
+    )
     search_fields = ("=id", "loan__id", "loan__customer__name", "loan__customer__address")
     list_per_page = 50
     autocomplete_fields = ("loan",)

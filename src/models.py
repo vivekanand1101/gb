@@ -83,13 +83,14 @@ class Account(BaseModel):
 
 class AccountDeposit(BaseModel):
     date = models.DateField()
-    amount = models.IntegerField()
+    principal = models.IntegerField()
+    penalty = models.IntegerField()
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="deposits")
 
     def __str__(self):
         customer = self.account.customer
         return "{}, {}, {}, Account Id: {}".format(
-            customer.name, self.amount, self.date, self.account.pk
+            customer.name, self.principal + self.penalty, self.date, self.account.pk
         )
 
     class Meta:
@@ -119,12 +120,14 @@ class Loan(BaseModel):
 
 class LoanDeposit(BaseModel):
     date = models.DateField()
-    amount = models.IntegerField()
+    principal = models.IntegerField()
+    interest = models.IntegerField()
+    penalty = models.IntegerField()
     loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="deposits")
 
     def __str__(self):
         return "{}, {}, {}, Loan Deposit Id: {}".format(
-            self.loan.pk, self.amount, self.date, self.pk
+            self.loan.pk, self.principal + self.interest + self.penalty, self.date, self.pk
         )
 
     class Meta:
