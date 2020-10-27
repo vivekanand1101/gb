@@ -1,6 +1,3 @@
-from datetime import datetime
-
-from dateutil import relativedelta
 from django import forms
 from django.contrib import admin
 from django.urls import reverse
@@ -13,6 +10,8 @@ from src.models import Customer
 from src.models import Iteration
 from src.models import Loan
 from src.models import LoanDeposit
+from src.utils import get_account_dues
+from src.utils import get_loan_dues
 
 
 class SuperUserAdmin(admin.ModelAdmin):
@@ -86,26 +85,7 @@ class AccountAdmin(admin.ModelAdmin):
     autocomplete_fields = ("customer",)
 
     def dues(self, obj):
-        deposits = obj.deposits.all()
-        iteration = obj.iteration
-        current_date = datetime.today().date()
-        start_date = iteration.start_date
-        diff = relativedelta.relativedelta(current_date, start_date)
-        total_months = (diff.years * 12) + (diff.months)
-        if diff.days > 0:
-            total_months += 1
-        total_principal_paid = sum([deposit.principal for deposit in deposits])
-        total_installments_paid = int(total_principal_paid / iteration.deposit_amount)
-        total_installments_missed = max(total_months - total_installments_paid, 0)
-        return int(
-            (
-                total_installments_missed
-                * iteration.deposit_amount
-                * (100 + iteration.late_deposit_fine)
-                * (100 + iteration.interest_rate)
-            )
-            / (100 * 100)
-        )
+        return get_account_dues(obj)
 
     def last_deposit_date(self, obj):
         objs = obj.deposits.order_by("-date")
@@ -237,27 +217,18 @@ class CustomerAdmin(admin.ModelAdmin):
             return 0
 
     def account_dues(self, obj):
-        total_iteration_dues = 0
-        # current_date = datetime.today().date()
-        # for account in obj.accounts.all():
-        #     iteration = account.iteration
-        # iteration_start_date = iteration.start_date
-        # diff = relativedelta.relativedelta(current_date, iteration_start_date)
-        # total_months = (diff.years * 12) + diff.months
-        # total_days = diff.days
-        # import pdb; pdb.set_trace()
-        # total_dues = (total_months * iteration.deposit_amount) + (total_days * iteration.late_deposit_fine)
-        # account_deposits = AccountDeposit.objects.filter(account=account).all()
-        # total_deposit = 0
-        # total_days_late = 0
-        # for deposit in account_deposits:
-        #     total_deposit += deposit.amount
-        #     total_days_late += max((deposit.date.day - iteration.start_date.day), 0)
-        # total_iteration_dues += (total_dues - total_deposit)
-        return total_iteration_dues
+        customer_accounts = obj.accounts.all()
+        total_dues = 0
+        for obj in customer_accounts:
+            total_dues += get_account_dues(obj)
+        return total_dues
 
     def loan_dues(self, obj):
-        return 0
+        loans = obj.loans.all()
+        total_dues = 0
+        for obj in loans:
+            total_dues += get_loan_dues(obj)
+        return total_dues
 
     def total_dues(self, obj):
         return self.account_dues(obj) + self.loan_dues(obj)
@@ -289,10 +260,6 @@ class LoanAdmin(admin.ModelAdmin):
     list_per_page = 50
     autocomplete_fields = ("customer",)
 
-    def _principal_dues(self, obj, total_months, total_principal_paid):
-        principal_should_be_paid = obj.amount * 0.1 * total_months
-        return max(principal_should_be_paid - total_principal_paid, 0)
-
     def principal(self, obj):
         return self.dues(obj, principal=True)
 
@@ -303,36 +270,7 @@ class LoanAdmin(admin.ModelAdmin):
         return self.dues(obj, penalty=True)
 
     def dues(self, obj, principal=False, interest=False, penalty=False):
-        deposits = obj.deposits.all()
-        iteration = obj.iteration
-        current_date = datetime.today().date()
-        start_date = iteration.start_date
-        diff = relativedelta.relativedelta(current_date, start_date)
-        total_months = (diff.years * 12) + (diff.months)
-        if diff.days > 0:
-            total_months += 1
-        total_months -= 1
-        total_principal_paid = sum([deposit.principal for deposit in deposits])
-        total_principal_dues = self._principal_dues(obj, total_months, total_principal_paid)
-        if principal:
-            return int(total_principal_dues)
-        total_installments_dues = int(total_principal_dues / (obj.amount * 0.1))
-        total_installments_dues = max(total_installments_dues, 1)
-        total_interest = (
-            total_installments_dues
-            * (obj.amount - total_principal_paid)
-            * (iteration.interest_rate)
-        ) / 100
-        if interest:
-            return int(total_interest)
-        total_penalty = (
-            total_installments_dues
-            * (obj.amount - total_principal_paid)
-            * (iteration.late_deposit_fine)
-        ) / 100
-        if penalty:
-            return int(total_penalty)
-        return int(total_principal_dues + total_interest + total_penalty)
+        return get_loan_dues(obj, principal, interest, penalty)
 
     def last_deposit_date(self, obj):
         objs = obj.deposits.order_by("-date")
