@@ -60,3 +60,47 @@ def get_account_dues(obj):
         )
         / (100 * 100)
     )
+
+
+def get_account_installments(obj):
+    deposits = obj.deposits.all()
+    iteration = obj.iteration
+    current_date = datetime.today().date()
+    start_date = iteration.start_date
+    diff = relativedelta.relativedelta(current_date, start_date)
+    total_months = (diff.years * 12) + (diff.months)
+    _html = ""
+    for i in range(0, total_months + 1):
+        installment_date = start_date + relativedelta.relativedelta(months=i)
+        principal = 0
+        penalty = 0
+        for deposit in deposits:
+            if deposit.date == installment_date:
+                principal = deposit.principal
+                penalty = deposit.penalty
+        _installment = f"<td>{installment_date.strftime('%d-%m-%Y')}</td><td>{principal}<td>{penalty}</td></td>"
+        _html += f"<tr>{_installment}</tr>"
+    return _html
+
+
+def get_loan_installments(obj):
+    deposits = obj.deposits.all()
+    iteration = obj.iteration
+    current_date = datetime.today().date()
+    start_date = iteration.start_date
+    diff = relativedelta.relativedelta(current_date, start_date)
+    total_months = (diff.years * 12) + (diff.months)
+    _html = ""
+    for i in range(1, total_months + 1):
+        installment_date = start_date + relativedelta.relativedelta(months=i)
+        principal = 0
+        interest = 0
+        penalty = 0
+        for deposit in deposits:
+            if deposit.date == installment_date:
+                principal = deposit.principal
+                interest = deposit.interest
+                penalty = deposit.penalty
+        _installment = f"<td>{installment_date.strftime('%d-%m-%Y')}</td><td>{principal}</td><td>{interest}</td><td>{penalty}</td>"
+        _html += f"<tr>{_installment}</tr>"
+    return _html

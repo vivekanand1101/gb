@@ -11,7 +11,9 @@ from src.models import Iteration
 from src.models import Loan
 from src.models import LoanDeposit
 from src.utils import get_account_dues
+from src.utils import get_account_installments
 from src.utils import get_loan_dues
+from src.utils import get_loan_installments
 
 
 class SuperUserAdmin(admin.ModelAdmin):
@@ -55,7 +57,9 @@ class AccountAdmin(admin.ModelAdmin):
 
     add_form = AccountForm
 
-    fieldsets = ((None, {"fields": ("created_by", "modified_by", "customer", "iteration")},),)
+    fieldsets = (
+        (None, {"fields": ("created_by", "modified_by", "customer", "iteration", "installments")},),
+    )
     list_display = (
         "account_id",
         "customer_url",
@@ -67,9 +71,16 @@ class AccountAdmin(admin.ModelAdmin):
     )
     list_filter = ("customer__address",)
     search_fields = ("=id", "customer__name", "customer__address")
-    readonly_fields = tuple()
+    readonly_fields = ("installments",)
     list_per_page = 50
     autocomplete_fields = ("customer",)
+
+    def installments(self, obj):
+        return format_html(
+            f"<table><tr><th>Month</th><th>Principal Paid</th><th>Penalty Paid</th></tr>{get_account_installments(obj)}</table>"
+        )
+
+    installments.allow_tags = True
 
     def dues(self, obj):
         return get_account_dues(obj)
@@ -226,7 +237,17 @@ class LoanAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             None,
-            {"fields": ("created_by", "modified_by", "customer", "iteration", "amount", "status")},
+            {
+                "fields": (
+                    "created_by",
+                    "modified_by",
+                    "customer",
+                    "iteration",
+                    "amount",
+                    "status",
+                    "installments",
+                )
+            },
         ),
     )
     list_display = (
@@ -246,6 +267,14 @@ class LoanAdmin(admin.ModelAdmin):
     search_fields = ("=id", "customer__name", "customer__address", "customer__phone_number")
     list_per_page = 50
     autocomplete_fields = ("customer",)
+    readonly_fields = ("installments",)
+
+    def installments(self, obj):
+        return format_html(
+            f"<table><tr><th>Month</th><th>Principal Paid</th><th>Interest Paid</th><th>Penalty Paid</th></tr>{get_loan_installments(obj)}</table>"
+        )
+
+    installments.allow_tags = True
 
     def principal(self, obj):
         return self.dues(obj, principal=True)
