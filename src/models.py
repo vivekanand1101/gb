@@ -54,12 +54,12 @@ class Iteration(BaseModel):
 
 class Customer(BaseModel):
     name = models.CharField(max_length=50)
-    address = models.CharField(max_length=250)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
     phone_number = models.CharField(max_length=10)
 
     def __str__(self):
         return "{}, {}, {}, Customer Id: {}".format(
-            self.name, self.address, self.phone_number, self.pk
+            self.name, self.address.name, self.phone_number, self.pk
         )
 
     class Meta:
