@@ -26,7 +26,7 @@ class Address(BaseModel):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-        return "address: {}".format(self.name)
+        return "{}".format(self.name)
 
     class Meta:
         db_table = "address"
