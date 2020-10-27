@@ -3,12 +3,12 @@
 5. loan dues to be split in 3 parts - principal, interest and penalty -> done
 10. Add status in loan -> pending and approved -> done
 11. Address as separate table -> done
+12. Installments view for account -> done
+13. Installments view for loan -> done
 
 7. Dues list generate -> account, loan, all
 1. Receipt
 8. acl included monitoring, benefit
-12. Installments view for account
-13. Installments view for loan
 6. Bulk actions -> generate Receipt, settle dues
 9. Backup
 2. bina principal waala adjustment loan
