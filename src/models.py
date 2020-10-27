@@ -44,7 +44,7 @@ class Iteration(BaseModel):
     day_of_payment = models.IntegerField()
 
     def __str__(self):
-        return "Iteration Id: {}, Start Date: {}".format(self.pk, self.start_date)
+        return "{}, {}".format(self.pk, self.start_date)
 
     class Meta:
         db_table = "iteration"

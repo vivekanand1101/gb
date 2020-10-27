@@ -277,6 +277,9 @@ class LoanAdmin(admin.ModelAdmin):
         "iteration",
         "amount",
         "dues",
+        "principal",
+        "interest",
+        "penalty",
         "loan_deposits_url",
         "last_deposit_date",
         "status",
@@ -286,8 +289,49 @@ class LoanAdmin(admin.ModelAdmin):
     list_per_page = 50
     autocomplete_fields = ("customer",)
 
-    def dues(self, obj):
-        return 0
+    def _principal_dues(self, obj, total_months, total_principal_paid):
+        principal_should_be_paid = obj.amount * 0.1 * total_months
+        return max(principal_should_be_paid - total_principal_paid, 0)
+
+    def principal(self, obj):
+        return self.dues(obj, principal=True)
+
+    def interest(self, obj):
+        return self.dues(obj, interest=True)
+
+    def penalty(self, obj):
+        return self.dues(obj, penalty=True)
+
+    def dues(self, obj, principal=False, interest=False, penalty=False):
+        deposits = obj.deposits.all()
+        iteration = obj.iteration
+        current_date = datetime.today().date()
+        start_date = iteration.start_date
+        diff = relativedelta.relativedelta(current_date, start_date)
+        total_months = (diff.years * 12) + (diff.months)
+        if diff.days > 0:
+            total_months += 1
+        total_months -= 1
+        total_principal_paid = sum([deposit.principal for deposit in deposits])
+        total_principal_dues = self._principal_dues(obj, total_months, total_principal_paid)
+        if principal:
+            return int(total_principal_dues)
+        total_installments_dues = int(total_principal_dues / (obj.amount * 0.1))
+        total_interest = (
+            total_installments_dues
+            * (obj.amount - total_principal_paid)
+            * (iteration.interest_rate)
+        ) / 100
+        if interest:
+            return int(total_interest)
+        total_penalty = (
+            total_installments_dues
+            * (obj.amount - total_principal_paid)
+            * (iteration.late_deposit_fine)
+        ) / 100
+        if penalty:
+            return int(total_penalty)
+        return int(total_principal_dues + total_interest + total_penalty)
 
     def last_deposit_date(self, obj):
         objs = obj.deposits.order_by("-date")
