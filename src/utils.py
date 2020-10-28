@@ -1,6 +1,11 @@
 from datetime import datetime
 
 from dateutil import relativedelta
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.platypus.tables import Table
+from reportlab.platypus.tables import TableStyle
 
 
 def _principal_dues(obj, total_months, total_principal_paid):
@@ -39,7 +44,7 @@ def get_loan_dues(obj, principal=False, interest=False, penalty=False):
     return int(total_principal_dues + total_interest + total_penalty)
 
 
-def get_account_dues(obj):
+def get_account_dues(obj, principal=False, penalty=False):
     deposits = obj.deposits.all()
     iteration = obj.iteration
     current_date = datetime.today().date()
@@ -51,15 +56,25 @@ def get_account_dues(obj):
     total_principal_paid = sum([deposit.principal for deposit in deposits])
     total_installments_paid = int(total_principal_paid / iteration.deposit_amount)
     total_installments_missed = max(total_months - total_installments_paid, 0)
-    return int(
-        (
-            total_installments_missed
-            * iteration.deposit_amount
-            * (100 + iteration.late_deposit_fine)
-            * (100 + iteration.interest_rate)
-        )
-        / (100 * 100)
+    principal_dues = total_installments_missed * iteration.deposit_amount
+    if principal:
+        return principal_dues
+    penalty_dues = total_installments_missed * (
+        iteration.late_deposit_fine + iteration.interest_rate
     )
+    if penalty:
+        return penalty_dues
+
+    return int(principal_dues + penalty_dues)
+    # return int(
+    #     (
+    #         total_installments_missed
+    #         * iteration.deposit_amount
+    #         * (100 + iteration.late_deposit_fine)
+    #         * (100 + iteration.interest_rate)
+    #     )
+    #     / (100 * 100)
+    # )
 
 
 def get_account_installments(obj):
@@ -104,3 +119,30 @@ def get_loan_installments(obj):
         _installment = f"<td>{installment_date.strftime('%d-%m-%Y')}</td><td>{principal}</td><td>{interest}</td><td>{penalty}</td>"
         _html += f"<tr>{_installment}</tr>"
     return _html
+
+
+def generate_pdf_buffer(buffer, data, lengths):
+    # from reportlab.lib.pagesizes import A4
+    # from reportlab.lib.styles import getSampleStyleSheet
+    # from reportlab.platypus import SimpleDocTemplate
+
+    # elements = []
+    # doc = SimpleDocTemplate('loan_dues.pdf', pagesize=A4)
+    # styles=getSampleStyleSheet()
+    # styleN = styles["Normal"]
+    p = canvas.Canvas(buffer)
+    table_style = TableStyle(
+        [["GRID", (0, 0), (-1, -1), 1, colors.black], ["ALIGN", (0, 0), (-1, -1), "CENTER"]]
+    )
+    _table = Table(data, [_item * inch for _item in lengths], style=table_style, repeatRows=1,)
+    # elements.append(_table)
+    # _table = Table(_loans)
+    w, h = _table.wrapOn(p, 0.25 * inch, 0.25 * inch)
+    # _table.drawOn(p, 5 * [0.4*inch], 1 * inch)
+    # _table.drawOn(p, 1 * inch, 1 * inch)
+    # _table.drawOn(p, 45, 800)
+    _table.hAlign = "LEFT"
+    _table.drawOn(p, 45, 0)
+    p.showPage()
+    p.save()
+    return buffer

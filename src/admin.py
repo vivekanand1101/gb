@@ -1,5 +1,8 @@
+import io
+
 from django import forms
 from django.contrib import admin
+from django.http import FileResponse
 from django.urls import reverse
 from django.utils.html import format_html
 
@@ -10,6 +13,7 @@ from src.models import Customer
 from src.models import Iteration
 from src.models import Loan
 from src.models import LoanDeposit
+from src.utils import generate_pdf_buffer
 from src.utils import get_account_dues
 from src.utils import get_account_installments
 from src.utils import get_loan_dues
@@ -185,7 +189,84 @@ class CustomerAdmin(admin.ModelAdmin):
 
     list_filter = ("address",)
     search_fields = ("=id", "name", "address__name", "phone_number")
+    actions = ["generate_loan_dues_list", "generate_account_dues_list"]
     list_per_page = 50
+
+    def generate_loan_dues_list(self, request, queryset):
+        customers = Customer.objects.all()
+        _loans = [
+            ["Sr No", "C Id", "Name", "Address", "Loan Id", "Principal", "Interest", "Penalty"]
+        ]
+        count = 1
+        for customer in customers:
+            for _loan in customer.loans.all():
+                dues = get_loan_dues(_loan)
+                if dues > 0:
+                    principal_dues = get_loan_dues(_loan, principal=True)
+                    interest_dues = get_loan_dues(_loan, interest=True)
+                    penalty_dues = get_loan_dues(_loan, penalty=True)
+                    datum = [
+                        count,
+                        customer.id,
+                        customer.name,
+                        customer.address.name,
+                        _loan.id,
+                        principal_dues,
+                        interest_dues,
+                        penalty_dues,
+                    ]
+                    _loans.append(datum)
+                    count += 1
+        buffer = io.BytesIO()
+        lengths = [
+            0.75,
+            0.75,
+            1.25,
+            1.25,
+            0.75,
+            0.75,
+            0.75,
+            0.75,
+        ]
+        generate_pdf_buffer(buffer, data=_loans, lengths=lengths)
+        buffer.seek(0)
+        return FileResponse(buffer, filename="loan_dues.pdf")
+
+    def generate_account_dues_list(self, request, queryset):
+        customers = Customer.objects.all()
+        _accounts = [["Sr No", "C Id", "Name", "Address", "Account Id", "Principal", "Penalty"]]
+        count = 1
+        for customer in customers:
+            for _account in customer.accounts.all():
+                dues = get_account_dues(_account)
+                if dues > 0:
+                    principal_dues = get_account_dues(_account, principal=True)
+                    penalty_dues = get_account_dues(_account, penalty=True)
+                    datum = [
+                        count,
+                        customer.id,
+                        customer.name,
+                        customer.address.name,
+                        _account.id,
+                        principal_dues,
+                        penalty_dues,
+                    ]
+                    _accounts.append(datum)
+                    count += 1
+        buffer = io.BytesIO()
+        lengths = [
+            0.75,
+            0.75,
+            1.25,
+            1.25,
+            0.75,
+            0.75,
+            0.75,
+            0.75,
+        ]
+        generate_pdf_buffer(buffer, data=_accounts, lengths=lengths)
+        buffer.seek(0)
+        return FileResponse(buffer, filename="account_dues.pdf")
 
     def account(self, obj):
         url = reverse(f"admin:src_account_add")
@@ -378,3 +459,4 @@ admin.site.register(Loan, LoanAdmin)
 admin.site.register(LoanDeposit, LoanDepositAdmin)
 admin.site.register(AccountDeposit, AccountDepositAdmin)
 admin.site.register(Address)
+admin.site.disable_action("delete_selected")
