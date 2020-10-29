@@ -125,7 +125,11 @@ def generate_pdf_buffer(response, data):
     elements = []
     doc = SimpleDocTemplate(response, pagesize=A4)
     table_style = TableStyle(
-        [["GRID", (0, 0), (-1, -1), 1, colors.black], ["ALIGN", (0, 0), (-1, -1), "CENTER"]]
+        [
+            ["GRID", (0, 0), (-1, -1), 1, colors.black],
+            ["ALIGN", (0, 0), (-1, -1), "CENTER"],
+            ["FONTNAME", (0, 0), (-1, 0), "Courier-Bold"],
+        ]
     )
     _table = Table(data, style=table_style, repeatRows=1,)
     elements.append(_table)
