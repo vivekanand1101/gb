@@ -2,8 +2,8 @@ from datetime import datetime
 
 from dateutil import relativedelta
 from reportlab.lib import colors
-from reportlab.lib.units import inch
-from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate
 from reportlab.platypus.tables import Table
 from reportlab.platypus.tables import TableStyle
 
@@ -121,28 +121,12 @@ def get_loan_installments(obj):
     return _html
 
 
-def generate_pdf_buffer(buffer, data, lengths):
-    # from reportlab.lib.pagesizes import A4
-    # from reportlab.lib.styles import getSampleStyleSheet
-    # from reportlab.platypus import SimpleDocTemplate
-
-    # elements = []
-    # doc = SimpleDocTemplate('loan_dues.pdf', pagesize=A4)
-    # styles=getSampleStyleSheet()
-    # styleN = styles["Normal"]
-    p = canvas.Canvas(buffer)
+def generate_pdf_buffer(response, data):
+    elements = []
+    doc = SimpleDocTemplate(response, pagesize=A4)
     table_style = TableStyle(
         [["GRID", (0, 0), (-1, -1), 1, colors.black], ["ALIGN", (0, 0), (-1, -1), "CENTER"]]
     )
-    _table = Table(data, [_item * inch for _item in lengths], style=table_style, repeatRows=1,)
-    # elements.append(_table)
-    # _table = Table(_loans)
-    w, h = _table.wrapOn(p, 0.25 * inch, 0.25 * inch)
-    # _table.drawOn(p, 5 * [0.4*inch], 1 * inch)
-    # _table.drawOn(p, 1 * inch, 1 * inch)
-    # _table.drawOn(p, 45, 800)
-    _table.hAlign = "LEFT"
-    _table.drawOn(p, 45, 0)
-    p.showPage()
-    p.save()
-    return buffer
+    _table = Table(data, style=table_style, repeatRows=1,)
+    elements.append(_table)
+    doc.build(elements)

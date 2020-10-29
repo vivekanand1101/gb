@@ -1,8 +1,6 @@
-import io
-
 from django import forms
 from django.contrib import admin
-from django.http import FileResponse
+from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.html import format_html
 
@@ -195,7 +193,16 @@ class CustomerAdmin(admin.ModelAdmin):
     def generate_loan_dues_list(self, request, queryset):
         customers = Customer.objects.all()
         _loans = [
-            ["Sr No", "C Id", "Name", "Address", "Loan Id", "Principal", "Interest", "Penalty"]
+            [
+                "Serial",
+                "Customer Id",
+                "Name",
+                "Address",
+                "Loan Id",
+                "Principal",
+                "Interest",
+                "Penalty",
+            ]
         ]
         count = 1
         for customer in customers:
@@ -217,24 +224,16 @@ class CustomerAdmin(admin.ModelAdmin):
                     ]
                     _loans.append(datum)
                     count += 1
-        buffer = io.BytesIO()
-        lengths = [
-            0.75,
-            0.75,
-            1.25,
-            1.25,
-            0.75,
-            0.75,
-            0.75,
-            0.75,
-        ]
-        generate_pdf_buffer(buffer, data=_loans, lengths=lengths)
-        buffer.seek(0)
-        return FileResponse(buffer, filename="loan_dues.pdf")
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = "inline; filename='loan_dues.pdf'"
+        generate_pdf_buffer(response, data=_loans)
+        return response
 
     def generate_account_dues_list(self, request, queryset):
         customers = Customer.objects.all()
-        _accounts = [["Sr No", "C Id", "Name", "Address", "Account Id", "Principal", "Penalty"]]
+        _accounts = [
+            ["Serial", "Customer Id", "Name", "Address", "Account Id", "Principal", "Penalty"]
+        ]
         count = 1
         for customer in customers:
             for _account in customer.accounts.all():
@@ -253,20 +252,10 @@ class CustomerAdmin(admin.ModelAdmin):
                     ]
                     _accounts.append(datum)
                     count += 1
-        buffer = io.BytesIO()
-        lengths = [
-            0.75,
-            0.75,
-            1.25,
-            1.25,
-            0.75,
-            0.75,
-            0.75,
-            0.75,
-        ]
-        generate_pdf_buffer(buffer, data=_accounts, lengths=lengths)
-        buffer.seek(0)
-        return FileResponse(buffer, filename="account_dues.pdf")
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = "inline; filename='account_dues.pdf'"
+        generate_pdf_buffer(response, data=_accounts)
+        return response
 
     def account(self, obj):
         url = reverse(f"admin:src_account_add")
