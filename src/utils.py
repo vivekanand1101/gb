@@ -2,7 +2,11 @@ from datetime import datetime
 
 from dateutil import relativedelta
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import Paragraph
 from reportlab.platypus import SimpleDocTemplate
 from reportlab.platypus.tables import Table
 from reportlab.platypus.tables import TableStyle
@@ -121,9 +125,13 @@ def get_loan_installments(obj):
     return _html
 
 
-def generate_pdf_buffer(response, data):
+def generate_dues_pdf_response(response, data, header_text):
     elements = []
     doc = SimpleDocTemplate(response, pagesize=A4)
+    styles = getSampleStyleSheet()
+    style = ParagraphStyle(name="Header", parent=styles["Heading1"], alignment=TA_CENTER)
+    header = Paragraph(header_text, style)
+    elements.append(header)
     table_style = TableStyle(
         [
             ["GRID", (0, 0), (-1, -1), 1, colors.black],

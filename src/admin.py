@@ -11,7 +11,7 @@ from src.models import Customer
 from src.models import Iteration
 from src.models import Loan
 from src.models import LoanDeposit
-from src.utils import generate_pdf_buffer
+from src.utils import generate_dues_pdf_response
 from src.utils import get_account_dues
 from src.utils import get_account_installments
 from src.utils import get_loan_dues
@@ -226,7 +226,7 @@ class CustomerAdmin(admin.ModelAdmin):
                     count += 1
         response = HttpResponse(content_type="application/pdf")
         response["Content-Disposition"] = "inline; filename='loan_dues.pdf'"
-        generate_pdf_buffer(response, data=_loans)
+        generate_dues_pdf_response(response, data=_loans, header_text="Loan Dues List")
         return response
 
     def generate_account_dues_list(self, request, queryset):
@@ -254,7 +254,7 @@ class CustomerAdmin(admin.ModelAdmin):
                     count += 1
         response = HttpResponse(content_type="application/pdf")
         response["Content-Disposition"] = "inline; filename='account_dues.pdf'"
-        generate_pdf_buffer(response, data=_accounts)
+        generate_dues_pdf_response(response, data=_accounts, header_text="Account Dues List")
         return response
 
     def account(self, obj):
