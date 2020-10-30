@@ -187,8 +187,20 @@ class CustomerAdmin(admin.ModelAdmin):
 
     list_filter = ("address",)
     search_fields = ("=id", "name", "address__name", "phone_number")
-    actions = ["generate_loan_dues_list", "generate_account_dues_list"]
+    actions = [
+        "generate_loan_dues_list",
+        "generate_account_dues_list",
+        "generate_receipt_this_month",
+    ]
     list_per_page = 50
+
+    def generate_receipt_this_month(self, request, queryset):
+        from src.utils import generate_invoice
+
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = "inline; filename='receipt.pdf'"
+        generate_invoice(response)
+        return response
 
     def generate_loan_dues_list(self, request, queryset):
         customers = Customer.objects.all()

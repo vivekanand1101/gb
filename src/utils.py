@@ -1,6 +1,13 @@
+import os
+
 from datetime import datetime
 
 from dateutil import relativedelta
+from pyinvoice.models import ClientInfo
+from pyinvoice.models import InvoiceInfo
+from pyinvoice.models import Item
+from pyinvoice.models import ServiceProviderInfo
+from pyinvoice.templates import SimpleInvoice
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
@@ -10,6 +17,8 @@ from reportlab.platypus import Paragraph
 from reportlab.platypus import SimpleDocTemplate
 from reportlab.platypus.tables import Table
 from reportlab.platypus.tables import TableStyle
+
+os.environ["INVOICE_LANG"] = "en"
 
 
 def _principal_dues(obj, total_months, total_principal_paid):
@@ -142,3 +151,36 @@ def generate_dues_pdf_response(response, data, header_text):
     _table = Table(data, style=table_style, repeatRows=1,)
     elements.append(_table)
     doc.build(elements)
+
+
+def generate_invoice(response):
+    doc = SimpleInvoice(
+        response,
+        pagesize="A4",
+        provider_header="Grameen Vikas Sahyog Samiti",
+        client_header="Pawan Kumar",
+        provider_address="Basadhia, Samastipur",
+        client_address="Majkothi, Kerai",
+    )
+
+    # Paid stamp, optional
+    doc.is_paid = True
+
+    doc.service_provider_info = ServiceProviderInfo(street="Basadhia",)
+    doc.invoice_info = InvoiceInfo(1023, datetime.now())
+
+    doc.client_info = ClientInfo(
+        name="Pawan Kumar", street="Majkothi, Kerai", city="1025,1026,1027"
+    )
+
+    # Add Item
+    doc.add_item(Item("Monthly Account Credit", 5, 500))
+    doc.add_item(Item("Monthly Penalty", 5, 40))
+    doc.add_item(Item("Loan Principal", 0, 0))
+    doc.add_item(Item("Loan Interest", 1, 700))
+    doc.add_item(Item("Loan Penalty", 1, 560))
+    doc.add_item(Item("Other Charges", 0, 0))
+
+    doc.set_bottom_tip("Don't hesitate to contact us for any questions!")
+
+    doc.finish()
