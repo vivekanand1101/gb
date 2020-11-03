@@ -11,6 +11,7 @@ from src.models import Customer
 from src.models import Iteration
 from src.models import Loan
 from src.models import LoanDeposit
+from src.models import Receipt
 from src.utils import generate_dues_pdf_response
 from src.utils import get_account_dues
 from src.utils import get_account_installments
@@ -198,8 +199,14 @@ class CustomerAdmin(admin.ModelAdmin):
         from src.utils import generate_invoice
 
         response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = "inline; filename='receipt.pdf'"
-        generate_invoice(response)
+        response["Content-Disposition"] = "inline; filename=receipt.pdf"
+        customer = queryset.first()
+        accounts = customer.accounts.all()
+        invoice_obj = Receipt.objects.create(customer=customer, detail={}, created_by=request.user)
+        for account in accounts:
+            invoice_obj.accounts.add(account)
+            invoice_obj.save()
+        generate_invoice(response, invoice_obj)
         return response
 
     def generate_loan_dues_list(self, request, queryset):
@@ -460,4 +467,5 @@ admin.site.register(Loan, LoanAdmin)
 admin.site.register(LoanDeposit, LoanDepositAdmin)
 admin.site.register(AccountDeposit, AccountDepositAdmin)
 admin.site.register(Address)
+admin.site.register(Receipt)
 admin.site.disable_action("delete_selected")

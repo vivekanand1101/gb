@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 from dateutil import relativedelta
+from django.conf import settings
 from pyinvoice.models import ClientInfo
 from pyinvoice.models import InvoiceInfo
 from pyinvoice.models import Item
@@ -26,7 +27,7 @@ def _principal_dues(obj, total_months, total_principal_paid):
     return max(principal_should_be_paid - total_principal_paid, 0)
 
 
-def get_loan_dues(obj, principal=False, interest=False, penalty=False):
+def get_loan_dues(obj, principal=False, interest=False, penalty=False, installments=False):
     deposits = obj.deposits.all()
     iteration = obj.iteration
     current_date = datetime.today().date()
@@ -47,6 +48,8 @@ def get_loan_dues(obj, principal=False, interest=False, penalty=False):
     ) / 100
     if interest:
         return int(total_interest)
+    if installments:
+        return total_installments_dues
     total_penalty = (
         total_installments_dues
         * (obj.amount - total_principal_paid)
@@ -57,7 +60,7 @@ def get_loan_dues(obj, principal=False, interest=False, penalty=False):
     return int(total_principal_dues + total_interest + total_penalty)
 
 
-def get_account_dues(obj, principal=False, penalty=False):
+def get_account_dues(obj, principal=False, penalty=False, installments=False):
     deposits = obj.deposits.all()
     iteration = obj.iteration
     current_date = datetime.today().date()
@@ -69,6 +72,8 @@ def get_account_dues(obj, principal=False, penalty=False):
     total_principal_paid = sum([deposit.principal for deposit in deposits])
     total_installments_paid = int(total_principal_paid / iteration.deposit_amount)
     total_installments_missed = max(total_months - total_installments_paid, 0)
+    if installments:
+        return total_installments_missed
     principal_dues = total_installments_missed * iteration.deposit_amount
     if principal:
         return principal_dues
@@ -153,33 +158,77 @@ def generate_dues_pdf_response(response, data, header_text):
     doc.build(elements)
 
 
-def generate_invoice(response):
+def _get_customer_active_accounts(customer):
+    accounts = customer.accounts.all()
+    account_string = ""
+    count = 0
+    for i in accounts:
+        account_string += f"{i.id}, "
+        if count == 4:
+            account_string += "\n"
+        count += 1
+    return account_string[:-2]
+
+
+def generate_invoice(response, invoice_obj):
+    customer = invoice_obj.customer
     doc = SimpleInvoice(
         response,
         pagesize="A4",
-        provider_header="Grameen Vikas Sahyog Samiti",
-        client_header="Pawan Kumar",
-        provider_address="Basadhia, Samastipur",
-        client_address="Majkothi, Kerai",
+        provider_header=settings.COMPANY_NAME,
+        client_header=customer.name,
+        provider_address=settings.COMPANY_ADDRESS,
+        client_address=customer.address.name,
     )
 
     # Paid stamp, optional
     doc.is_paid = True
 
-    doc.service_provider_info = ServiceProviderInfo(street="Basadhia",)
-    doc.invoice_info = InvoiceInfo(1023, datetime.now())
+    doc.service_provider_info = ServiceProviderInfo()
+    doc.invoice_info = InvoiceInfo(invoice_obj.id, invoice_obj.created_at)
 
     doc.client_info = ClientInfo(
-        name="Pawan Kumar", street="Majkothi, Kerai", city="1025,1026,1027"
+        name=customer.name,
+        street=customer.address.name,
+        city=_get_customer_active_accounts(customer),
     )
 
     # Add Item
-    doc.add_item(Item("Monthly Account Credit", 5, 500))
-    doc.add_item(Item("Monthly Penalty", 5, 40))
-    doc.add_item(Item("Loan Principal", 0, 0))
-    doc.add_item(Item("Loan Interest", 1, 700))
-    doc.add_item(Item("Loan Penalty", 1, 560))
-    doc.add_item(Item("Other Charges", 0, 0))
+    this_month = datetime.today().replace(day=15).date()
+    accounts = invoice_obj.accounts.all()
+    monthly_credit_count = 0
+    monthly_penalty_count = 0
+    total_credit = 0
+    total_penalty = 0
+    for account in accounts:
+        for deposit in account.deposits.all():
+            if deposit.date == this_month:
+                monthly_credit_count += 1
+                total_credit += deposit.principal
+                total_penalty += deposit.penalty
+                if deposit.penalty > 0:
+                    monthly_penalty_count += 1
+
+    total_loan_count = 0
+    total_loan_principal = 0
+    total_loan_interest = 0
+    total_loan_penalty = 0
+    total_penalty_count = 0
+    for loan in customer.loans.all():
+        for deposit in loan.deposits.all():
+            if deposit.date == this_month:
+                total_loan_count += 1
+                total_loan_principal += deposit.principal
+                total_loan_penalty += deposit.penalty
+                total_loan_interest += deposit.interest
+                if deposit.penalty > 0:
+                    total_penalty_count += 1
+
+    doc.add_item(Item("Monthly Account Credit", monthly_credit_count, total_credit))
+    doc.add_item(Item("Monthly Penalty", monthly_penalty_count, total_penalty))
+    doc.add_item(Item("Loan Principal", total_loan_count, total_loan_principal))
+    doc.add_item(Item("Loan Interest", total_loan_count, total_loan_interest))
+    doc.add_item(Item("Loan Penalty", total_penalty_count, total_loan_penalty))
 
     doc.set_bottom_tip("Don't hesitate to contact us for any questions!")
 

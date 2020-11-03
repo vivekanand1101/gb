@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.postgres import fields as pg_fields
 from django.db import models
 
 # Create your models here.
@@ -134,3 +135,17 @@ class LoanDeposit(BaseModel):
         db_table = "loan_deposits"
         verbose_name = "Loan Deposit"
         verbose_name_plural = "Loan Deposits"
+
+
+class Receipt(BaseModel):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name="receipts")
+    detail = pg_fields.JSONField()
+    accounts = models.ManyToManyField(Account, related_name="receipts")
+
+    def __str__(self):
+        return f"{self.id}, {self.created_at}"
+
+    class Meta:
+        db_table = "receipts"
+        verbose_name = "Receipt"
+        verbose_name_plural = "Receipts"
