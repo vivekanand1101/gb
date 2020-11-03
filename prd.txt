@@ -6,8 +6,8 @@
 12. Installments view for account -> done
 13. Installments view for loan -> done
 7. Dues list generate -> account, loan -> done
+1. Receipt -> done
 
-1. Receipt
 8. acl included monitoring, benefit
 6. Bulk actions -> generate Receipt, settle dues
 9. Backup

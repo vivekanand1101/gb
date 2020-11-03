@@ -205,7 +205,6 @@ class CustomerAdmin(admin.ModelAdmin):
         invoice_obj = Receipt.objects.create(customer=customer, detail={}, created_by=request.user)
         for account in accounts:
             invoice_obj.accounts.add(account)
-            invoice_obj.save()
         generate_invoice(response, invoice_obj)
         return response
 
@@ -244,7 +243,7 @@ class CustomerAdmin(admin.ModelAdmin):
                     _loans.append(datum)
                     count += 1
         response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = "inline; filename='loan_dues.pdf'"
+        response["Content-Disposition"] = "inline; filename=loan_dues.pdf"
         generate_dues_pdf_response(response, data=_loans, header_text="Loan Dues List")
         return response
 
@@ -272,7 +271,7 @@ class CustomerAdmin(admin.ModelAdmin):
                     _accounts.append(datum)
                     count += 1
         response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = "inline; filename='account_dues.pdf'"
+        response["Content-Disposition"] = "inline; filename=account_dues.pdf"
         generate_dues_pdf_response(response, data=_accounts, header_text="Account Dues List")
         return response
 
