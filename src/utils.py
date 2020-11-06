@@ -51,9 +51,8 @@ def get_loan_dues(obj, principal=False, interest=False, penalty=False, installme
     if installments:
         return total_installments_dues
     total_penalty = (
-        total_installments_dues
-        * (obj.amount - total_principal_paid)
-        * (iteration.late_deposit_fine)
+        max((total_installments_dues - 1), 0),
+        *(obj.amount - total_principal_paid) * (iteration.late_deposit_fine),
     ) / 100
     if penalty:
         return int(total_penalty)
@@ -77,22 +76,13 @@ def get_account_dues(obj, principal=False, penalty=False, installments=False):
     principal_dues = total_installments_missed * iteration.deposit_amount
     if principal:
         return principal_dues
-    penalty_dues = total_installments_missed * (
+    penalty_dues = max((total_installments_missed - 1), 0) * (
         iteration.late_deposit_fine + iteration.interest_rate
     )
     if penalty:
         return penalty_dues
 
     return int(principal_dues + penalty_dues)
-    # return int(
-    #     (
-    #         total_installments_missed
-    #         * iteration.deposit_amount
-    #         * (100 + iteration.late_deposit_fine)
-    #         * (100 + iteration.interest_rate)
-    #     )
-    #     / (100 * 100)
-    # )
 
 
 def get_account_installments(obj):
