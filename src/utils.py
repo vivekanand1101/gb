@@ -51,8 +51,9 @@ def get_loan_dues(obj, principal=False, interest=False, penalty=False, installme
     if installments:
         return total_installments_dues
     total_penalty = (
-        max((total_installments_dues - 1), 0),
-        *(obj.amount - total_principal_paid) * (iteration.late_deposit_fine),
+        max((total_installments_dues - 1), 0)
+        * (obj.amount - total_principal_paid)
+        * (iteration.late_deposit_fine)
     ) / 100
     if penalty:
         return int(total_penalty)
@@ -214,12 +215,19 @@ def generate_invoice(response, invoice_obj):
                 if deposit.penalty > 0:
                     total_penalty_count += 1
 
-    doc.add_item(Item("Monthly Account Credit", monthly_credit_count, total_credit))
-    doc.add_item(Item("Monthly Penalty", monthly_penalty_count, total_penalty))
-    doc.add_item(Item("Loan Principal", total_loan_count, total_loan_principal))
-    doc.add_item(Item("Loan Interest", total_loan_count, total_loan_interest))
-    doc.add_item(Item("Loan Penalty", total_penalty_count, total_loan_penalty))
+    details = {
+        "Account Credit": [monthly_credit_count, total_credit],
+        "Account Penalty": [monthly_penalty_count, total_penalty],
+        "Loan Principal": [total_loan_count, total_loan_principal],
+        "Loan Interest": [total_loan_count, total_loan_interest],
+        "Loan Penalty": [total_penalty_count, total_loan_penalty],
+    }
+    for key, value in details.items():
+        doc.add_item(Item(key, value[0], value[1]))
 
     doc.set_bottom_tip("Don't hesitate to contact us for any questions!")
 
     doc.finish()
+
+    invoice_obj.detail = details
+    invoice_obj.save()

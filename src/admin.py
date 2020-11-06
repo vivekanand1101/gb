@@ -459,6 +459,11 @@ class LoanDepositAdmin(admin.ModelAdmin):
         return format_html(f'<a href="{url}">{loan.pk}</a>')
 
 
+class ReceiptAdmin(admin.ModelAdmin):
+
+    list_display = ("id", "customer", "created_at")
+
+
 admin.site.register(Iteration)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Account, AccountAdmin)
@@ -466,5 +471,5 @@ admin.site.register(Loan, LoanAdmin)
 admin.site.register(LoanDeposit, LoanDepositAdmin)
 admin.site.register(AccountDeposit, AccountDepositAdmin)
 admin.site.register(Address)
-admin.site.register(Receipt)
+admin.site.register(Receipt, ReceiptAdmin)
 admin.site.disable_action("delete_selected")
