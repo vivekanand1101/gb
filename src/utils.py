@@ -1,9 +1,12 @@
 import os
 
 from datetime import datetime
+from math import pow
 
 from dateutil import relativedelta
 from django.conf import settings
+from django.db.models import F
+from django.db.models import Sum
 from pyinvoice.models import ClientInfo
 from pyinvoice.models import InvoiceInfo
 from pyinvoice.models import Item
@@ -18,6 +21,9 @@ from reportlab.platypus import Paragraph
 from reportlab.platypus import SimpleDocTemplate
 from reportlab.platypus.tables import Table
 from reportlab.platypus.tables import TableStyle
+
+from src.models import AccountDeposit
+from src.models import LoanDeposit
 
 os.environ["INVOICE_LANG"] = "en"
 
@@ -231,3 +237,54 @@ def generate_invoice(response, invoice_obj):
 
     invoice_obj.detail = details
     invoice_obj.save()
+
+
+def get_all_installment_dates(iteration):
+    start_date = iteration.start_date
+    total_months = iteration.no_of_months
+    day = iteration.day_of_payment
+
+    months = []
+    for i in range(1, total_months + 1):
+        months.append((start_date + relativedelta.relativedelta(months=i)).replace(day=day))
+    return months
+
+
+def get_all_loan_deposit_monthwise(months):
+    all_loan_deposits = (
+        LoanDeposit.objects.filter(date__in=months)
+        .values("date")
+        .order_by("date")
+        .annotate(total_principal=Sum("principal"))
+        .annotate(total_interest=Sum("interest"))
+        .annotate(total_penalty=Sum("penalty"))
+        .annotate(total_amount=F("total_principal") + F("total_interest") + F("total_penalty"))
+    )
+    all_loan_deposits = list(all_loan_deposits)
+    return all_loan_deposits
+
+
+def get_all_account_deposit_monthwise(months):
+    all_account_deposit = (
+        AccountDeposit.objects.filter(date__in=months)
+        .values("date")
+        .order_by("date")
+        .annotate(total_principal=Sum("principal"))
+        .annotate(total_penalty=Sum("penalty"))
+        .annotate(total_amount=F("total_principal") + F("total_penalty"))
+    )
+    all_account_deposit = list(all_account_deposit)
+    return all_account_deposit
+
+
+def get_total_threshold_amount(iteration):
+    deposit_amount = iteration.deposit_amount * iteration.no_of_months
+    return (iteration.return_amount - deposit_amount) * iteration.accounts.count()
+
+
+def get_optimum_amount(iteration):
+    _sum = 0
+    for i in range(iteration.no_of_months, 0, -1):
+        __sum = int(pow((1 + (iteration.interest_rate / 100)), i) * iteration.deposit_amount)
+        _sum += __sum
+    return (_sum - (iteration.deposit_amount * iteration.no_of_months)) * iteration.accounts.count()

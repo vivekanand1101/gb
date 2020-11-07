@@ -5,31 +5,76 @@ document.addEventListener('DOMContentLoaded', () => {
   const ctx = document.getElementById('myChart').getContext('2d');
 
   // Sample data
-  const chartData = [
-    {"date": "2009-08-08T00:00:00Z", "y": 3},
-    {"date": "2010-08-07T00:00:00Z", "y": 10},
-    {"date": "2011-08-06T00:00:00Z", "y": 15},
-    {"date": "2012-08-05T00:00:00Z", "y": 4},
-    {"date": "2020-01-03T00:00:00Z", "y": 2},
-    {"date": "2020-02-04T00:00:00Z", "y": 11},
-    {"date": "2020-03-02T00:00:00Z", "y": 3},
-    {"date": "2020-04-01T00:00:00Z", "y": 2},
-  ];
+  const interestData = {{ interestData|safe }}
+  const penaltyData = {{ penaltyData|safe }}
+  const interestPlusPenaltyData = {{ interestPlusPenaltyData|safe }}
+  const thresholdData = {{ thresholdData|safe }}
+  const optimumData = {{ optimumData|safe }}
 
   // Parse the dates to JS
-  chartData.forEach((d) => {
+  interestData.forEach((d) => {
+    d.x = new Date(d.date);
+  });
+
+  penaltyData.forEach((d) => {
+    d.x = new Date(d.date);
+  });
+
+  interestPlusPenaltyData.forEach((d) => {
+    d.x = new Date(d.date);
+  });
+
+  thresholdData.forEach((d) => {
+    d.x = new Date(d.date);
+  });
+
+  optimumData.forEach((d) => {
     d.x = new Date(d.date);
   });
 
   // Render the chart
   const chart = new Chart(ctx, {
-    type: 'bar',
+    type: 'line',
     data: {
       datasets: [
         {
+          label: 'Interest',
+          data: interestData,
+          backgroundColor: '#3e95cd',
+          fill: false,
+          steppedLine: 'middle'
+        },
+
+        {
+          label: 'Penalty',
+          data: penaltyData,
+          backgroundColor: '#8e5ea2',
+          fill: false,
+          steppedLine: 'middle'
+        },
+
+        {
           label: 'Interest + Penalty',
-          data: chartData,
-          backgroundColor: 'rgba(220,20,20,0.5)',
+          data: interestPlusPenaltyData,
+          backgroundColor: '#3cba9f',
+          fill: false,
+          steppedLine: 'middle'
+        },
+
+        {
+          label: 'Threshold',
+          data: thresholdData,
+          backgroundColor: '#e8c3b9',
+          fill: false,
+          steppedLine: 'middle'
+        },
+
+        {
+          label: 'Optimum',
+          data: optimumData,
+          backgroundColor: '#c45850',
+          fill: false,
+          steppedLine: 'middle'
         },
       ],
     },

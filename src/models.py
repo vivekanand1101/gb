@@ -43,6 +43,7 @@ class Iteration(BaseModel):
     late_deposit_fine = models.IntegerField()
     is_active = models.BooleanField()
     day_of_payment = models.IntegerField()
+    return_amount = models.IntegerField()
 
     def __str__(self):
         return "{}, {}".format(self.pk, self.start_date)
