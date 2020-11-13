@@ -245,7 +245,7 @@ def get_all_installment_dates(iteration):
     day = iteration.day_of_payment
 
     months = []
-    for i in range(1, total_months + 1):
+    for i in range(0, total_months):
         months.append((start_date + relativedelta.relativedelta(months=i)).replace(day=day))
     return months
 

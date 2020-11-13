@@ -1,7 +1,7 @@
 from django.urls import path
 
-from src.views import Profits
+from src.views import Analysis
 
 app = "src"
 
-urlpatterns = [path("", Profits.as_view(), name="profits")]
+urlpatterns = [path("<iteration_id>/analysis", Analysis.as_view(), name="analysis")]

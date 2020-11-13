@@ -1,6 +1,8 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.shortcuts import get_object_or_404
 from django.shortcuts import render
+from src.models import Iteration
 from django.views import View
 
 from src.models import Iteration
@@ -11,14 +13,14 @@ from src.utils import get_optimum_amount
 from src.utils import get_total_threshold_amount
 
 
-class Profits(LoginRequiredMixin, UserPassesTestMixin, View):
+class Analysis(LoginRequiredMixin, UserPassesTestMixin, View):
     login_url = "/login/"
 
     def test_func(self):
         return self.request.user.is_superuser
 
-    def get(self, request):
-        iteration = Iteration.objects.first()
+    def get(self, request, iteration_id):
+        iteration = get_object_or_404(Iteration, pk=iteration_id)
         months = get_all_installment_dates(iteration)
 
         account_paid = get_all_account_deposit_monthwise(months)

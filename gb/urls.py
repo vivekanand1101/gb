@@ -13,9 +13,22 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import include
 from django.urls import path
+from django.conf.urls import handler400
+from django.conf.urls import handler403
+from django.conf.urls import handler404
+from django.conf.urls import handler500
+from uuid import uuid4
+import time
 
 
-urlpatterns = [path("", admin.site.urls), path("analysis/", include("src.urls"))]
+urlpatterns = [path("", admin.site.urls), path("iteration/", include("src.urls"))]
+
+def http_not_found_view(request, *args, **kwargs):
+    request_id = str(uuid4())
+    request_epoch = time.time() * 1000
+    response = 404
+    return response
